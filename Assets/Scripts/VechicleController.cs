@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 
 public class VehicleControllerWithGears : MonoBehaviour
 {
@@ -26,9 +27,22 @@ public class VehicleControllerWithGears : MonoBehaviour
 
     public bool isSKeyReleased = true;         // Tracks if the S key has been released
 
+    // Add GameObjects for blinkers
+    public GameObject leftBlinker;
+    public GameObject rightBlinker;
+
+    // Variables to handle blinking state
+    private Coroutine leftBlinkerCoroutine;
+    private Coroutine rightBlinkerCoroutine;
+    private bool isLeftBlinkerOn = false;
+    private bool isRightBlinkerOn = false;
+
     void Start()
     {
         rb = GetComponent<Rigidbody>();
+        // Turn off blinkers initially
+        SetBlinker(leftBlinker, false);
+        SetBlinker(rightBlinker, false);
     }
 
     void Update()
@@ -44,6 +58,9 @@ public class VehicleControllerWithGears : MonoBehaviour
         {
             isSKeyReleased = true;
         }
+
+        // Check for blinker input
+        HandleBlinkers();
 
         // Shift gears based on current speed
         UpdateGear();
@@ -199,6 +216,60 @@ public class VehicleControllerWithGears : MonoBehaviour
         }
     }
 
+    void HandleBlinkers()
+    {
+        // Left Arrow blinker
+        if (Input.GetKeyDown(KeyCode.LeftArrow))
+        {
+            if (leftBlinkerCoroutine != null) StopCoroutine(leftBlinkerCoroutine); // Stop previous coroutine if running
+            isLeftBlinkerOn = !isLeftBlinkerOn;
+            if (isLeftBlinkerOn)
+            {
+                leftBlinkerCoroutine = StartCoroutine(BlinkerCoroutine(leftBlinker));
+            }
+            else
+            {
+                SetBlinker(leftBlinker, false);
+            }
+        }
+
+        // Right Arrow blinker
+        if (Input.GetKeyDown(KeyCode.RightArrow))
+        {
+            if (rightBlinkerCoroutine != null) StopCoroutine(rightBlinkerCoroutine); // Stop previous coroutine if running
+            isRightBlinkerOn = !isRightBlinkerOn;
+            if (isRightBlinkerOn)
+            {
+                rightBlinkerCoroutine = StartCoroutine(BlinkerCoroutine(rightBlinker));
+            }
+            else
+            {
+                SetBlinker(rightBlinker, false);
+            }
+        }
+    }
+
+    // Coroutine to make a blinker blink
+    IEnumerator BlinkerCoroutine(GameObject blinker)
+    {
+        while (true)
+        {
+            SetBlinker(blinker, true);   // Turn on blinker
+            yield return new WaitForSeconds(0.5f); // Wait for 0.5 seconds
+            SetBlinker(blinker, false);  // Turn off blinker
+            yield return new WaitForSeconds(0.5f); // Wait for 0.5 seconds
+        }
+    }
+
+    // Helper method to enable/disable blinker object
+    void SetBlinker(GameObject blinker, bool isActive)
+    {
+        if (blinker != null)
+        {
+            blinker.SetActive(isActive);
+        }
+    }
+
     public int GetCurrentGear()
     {
         return currentGear;
@@ -207,5 +278,15 @@ public class VehicleControllerWithGears : MonoBehaviour
     public float GetCurrentSpeed()
     {
         return currentSpeed;
+    }
+
+    public bool GetIsLeftBlinkerOn()
+    {
+        return isLeftBlinkerOn;
+    }
+
+    public bool GetIsRightBlinkerOn()
+    {
+        return isRightBlinkerOn;
     }
 }
