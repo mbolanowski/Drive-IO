@@ -8,6 +8,10 @@ public class PlayerManager : MonoBehaviour
     public int _incidents = 0;
     public TextMeshProUGUI incidentCount;
 
+    public float _speedMultiplier = 12f;
+
+    public bool isInLeftLane = false;
+
     public void AddIncident()
     {
         _incidents++;
@@ -21,5 +25,15 @@ public class PlayerManager : MonoBehaviour
     private void Update()
     {
         incidentCount.text = _incidents.ToString();
+    }
+
+    public bool GetIsInLeftLane()
+    {
+        return isInLeftLane;
+    }
+
+    public void SetIsInLeftLane(bool set)
+    {
+        isInLeftLane = set;
     }
 }

@@ -51,7 +51,7 @@ public class VehicleControllerWithGears : MonoBehaviour
         moveInput = Input.GetAxis("Vertical");
         steeringInput = Input.GetAxis("Horizontal");
 
-        Debug.Log(currentGear);
+        //Debug.Log(currentGear);
 
         // Detect if S key has been released
         if (moveInput >= -0.1f)
@@ -231,6 +231,12 @@ public class VehicleControllerWithGears : MonoBehaviour
             {
                 SetBlinker(leftBlinker, false);
             }
+            if(isRightBlinkerOn)
+            {
+                if (rightBlinkerCoroutine != null) StopCoroutine(rightBlinkerCoroutine); // Stop previous coroutine if running
+                isRightBlinkerOn = !isRightBlinkerOn;
+                SetBlinker(rightBlinker, false);
+            }
         }
 
         // Right Arrow blinker
@@ -245,6 +251,12 @@ public class VehicleControllerWithGears : MonoBehaviour
             else
             {
                 SetBlinker(rightBlinker, false);
+            }
+            if (isLeftBlinkerOn)
+            {
+                if (leftBlinkerCoroutine != null) StopCoroutine(leftBlinkerCoroutine); // Stop previous coroutine if running
+                isLeftBlinkerOn = !isLeftBlinkerOn;
+                SetBlinker(leftBlinker, false);
             }
         }
     }

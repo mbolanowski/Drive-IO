@@ -10,18 +10,19 @@ public class SpeedLimit : MonoBehaviour
 
     private float timeSinceLastCheck = 0f; // Timer to track elapsed time
 
-    private void Update()
+    private void OnTriggerStay(Collider other)
     {
         // Increment the timer by the time that has passed since the last frame
         timeSinceLastCheck += Time.deltaTime;
 
         // Check if 5 seconds have passed
-        if (timeSinceLastCheck >= 5f)
+        if (timeSinceLastCheck >= 2f)
         {
             // Check the vehicle's current speed against the speed limit
-            if ((vc.GetCurrentSpeed() * 12f) > _speedLimit)
+            if ((vc.GetCurrentSpeed() * playerManager._speedMultiplier) > _speedLimit)
             {
                 playerManager.AddIncident(); // Add incident if speed exceeds limit
+                Debug.Log("You've exceeded the speed limit!");
             }
 
             // Reset the timer after checking
