@@ -5,10 +5,13 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 1
+  - enabled: 0
     path: Assets/Samples/Colyseus SDK/0.15.12/Example/Scenes/Menu.unity
     guid: 38dbbfe151445d7449b4c0c4a6db09ca
-  - enabled: 1
+  - enabled: 0
     path: Assets/Samples/Colyseus SDK/0.15.12/Example/Scenes/Game.unity
     guid: 70a26fc896e8404419faa0855470f56e
+  - enabled: 1
+    path: Assets/Scenes/SampleScene.unity
+    guid: 9fc0d4010bbf28b4594072e72b8655ab
   m_configObjects: {}
