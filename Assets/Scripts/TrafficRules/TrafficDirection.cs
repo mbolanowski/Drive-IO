@@ -6,6 +6,8 @@ public class TriggerDirectionCheck : MonoBehaviour
 {
     private float timeSinceLastCheck = 0f; // Timer to track elapsed time
 
+    public float checkTime;
+
     public PlayerManager playerManager;
 
     private void OnTriggerStay(Collider other)
@@ -14,7 +16,7 @@ public class TriggerDirectionCheck : MonoBehaviour
         timeSinceLastCheck += Time.deltaTime;
 
         // Check if 5 seconds have passed
-        if (timeSinceLastCheck >= 2f)
+        if (timeSinceLastCheck >= checkTime)
         {
             // Ensure the object inside the trigger has a Transform (it should by default)
             if (other.transform != null)

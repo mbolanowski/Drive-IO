@@ -20,8 +20,8 @@ public class VechicleManager : MonoBehaviour
 
     private void Update()
     {
-        gearText.text = (vc.GetCurrentGear() + 1).ToString();
-        speedtext.text = (vc.GetCurrentSpeed() * pm._speedMultiplier).ToString("F1");
+        gearText.text = "Bieg: " + (vc.GetCurrentGear() + 1).ToString();
+        speedtext.text = "Prêdkoœæ: " + (vc.GetCurrentSpeed() * pm._speedMultiplier).ToString("F1");
     }
 
     public bool GetIsLeftBlinkerOn()

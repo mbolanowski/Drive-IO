@@ -24,7 +24,7 @@ public class PlayerManager : MonoBehaviour
 
     private void Update()
     {
-        incidentCount.text = _incidents.ToString();
+        incidentCount.text = "Wykroczenia: " + _incidents.ToString();
     }
 
     public bool GetIsInLeftLane()
