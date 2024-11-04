@@ -10,48 +10,71 @@ public class TriggerDirectionCheck : MonoBehaviour
 
     public PlayerManager playerManager;
 
+    public bool rightOfWay = false;
+
     private void OnTriggerStay(Collider other)
     {
-        // Increment the timer by the time that has passed since the last frame
-        timeSinceLastCheck += Time.deltaTime;
-
-        // Check if 5 seconds have passed
-        if (timeSinceLastCheck >= checkTime)
+        int layer = other.gameObject.layer;
+        if (layer == LayerMask.NameToLayer("Player"))
         {
-            // Ensure the object inside the trigger has a Transform (it should by default)
-            if (other.transform != null)
+            // Increment the timer by the time that has passed since the last frame
+            timeSinceLastCheck += Time.deltaTime;
+
+            // Check if 5 seconds have passed
+            if (timeSinceLastCheck >= checkTime)
             {
-                // Get the forward vector of the object inside the trigger
-                Vector3 objectForward = other.transform.forward;
-
-                // Get the forward vector of the trigger object (this script's object)
-                Vector3 triggerForward = transform.forward;
-
-                // Use Vector3.Dot to compare their forward directions
-                float dotProduct = Vector3.Dot(objectForward.normalized, triggerForward);
-
-                // Check if the object's forward vector is aligned with the trigger's forward vector
-                if (dotProduct > 0.7f)  // Same direction
+                // Ensure the object inside the trigger has a Transform (it should by default)
+                if (other.transform != null)
                 {
+                    // Get the forward vector of the object inside the trigger
+                    Vector3 objectForward = other.transform.forward;
 
-                }
-                else if (dotProduct < -0.7f)  // Opposite direction
-                {
-                    Debug.Log("You're going the wrong way!");
-                    playerManager.AddIncident();
+                    // Get the forward vector of the trigger object (this script's object)
+                    Vector3 triggerForward = transform.forward;
+
+                    // Use Vector3.Dot to compare their forward directions
+                    float dotProduct = Vector3.Dot(objectForward.normalized, triggerForward);
+
+                    // Check if the object's forward vector is aligned with the trigger's forward vector
+                    if (dotProduct > 0.7f)  // Same direction
+                    {
+
+                    }
+                    else if (dotProduct < -0.7f)  // Opposite direction
+                    {
+                        Debug.Log("You're going the wrong way!");
+                        playerManager.AddIncident();
+                    }
+                    else
+                    {
+                        Debug.Log("You're sideways!");
+                    }
                 }
                 else
                 {
-                    Debug.Log("You're sideways!");
+                    Debug.Log("No valid transform for " + other.gameObject.name);
                 }
-            }
-            else
-            {
-                Debug.Log("No valid transform for " + other.gameObject.name);
-            }
 
-            // Reset the timer after checking
-            timeSinceLastCheck = 0f;
+                // Reset the timer after checking
+                timeSinceLastCheck = 0f;
+            }
         }
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        int layer = other.gameObject.layer;
+        if (layer == LayerMask.NameToLayer("Player")){
+            playerManager.SetHasRightOfWay(rightOfWay);
+        }
+        else if (layer == LayerMask.NameToLayer("Car"))
+        {
+            CarsController carsController = other.GetComponent<CarsController>();
+            if (carsController != null)
+            {
+                carsController.HasRightOfWay = rightOfWay;
+            }
+        }
+        
     }
 }

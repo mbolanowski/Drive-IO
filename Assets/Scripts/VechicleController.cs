@@ -15,12 +15,16 @@ public class VehicleControllerWithGears : MonoBehaviour
     public float horizontalDrag = 0.98f;       // Simulate horizontal friction and resistance
     public float verticalDrag = 0.99f;         // Simulate vertical friction and resistance
     public float currentSpeed = 0f;            // Variable to store current speed
-    private int currentGear = 0;               // Start at gear 1 (index 0)
+    public int currentGear = 0;               // Start at gear 1 (index 0)
+
+    public float curveAmount = 1.0f;
+    public float raycastDistance = 10f; // Distance for each raycast
+    public LayerMask detectionLayer;
 
     private Rigidbody rb;
     private float moveInput;
-    private float steeringInput;
-    private float currentAcceleration = 0f;    // The current acceleration applied (ramps up)
+    public float steeringInput;
+    public float currentAcceleration = 0f;    // The current acceleration applied (ramps up)
 
     private float decelerationTime = 0f;        // Timer for how long S is pressed
     public float maxDecelerationTime = 5f;
@@ -64,6 +68,8 @@ public class VehicleControllerWithGears : MonoBehaviour
 
         // Shift gears based on current speed
         UpdateGear();
+
+        CheckForObstaclesAlongCurve();
     }
 
     public bool isDecelerating = false;  // Track if the vehicle is currently decelerating
@@ -231,7 +237,7 @@ public class VehicleControllerWithGears : MonoBehaviour
             {
                 SetBlinker(leftBlinker, false);
             }
-            if(isRightBlinkerOn)
+            if (isRightBlinkerOn)
             {
                 if (rightBlinkerCoroutine != null) StopCoroutine(rightBlinkerCoroutine); // Stop previous coroutine if running
                 isRightBlinkerOn = !isRightBlinkerOn;
@@ -260,6 +266,39 @@ public class VehicleControllerWithGears : MonoBehaviour
             }
         }
     }
+
+    void CheckForObstaclesAlongCurve()
+    {
+        // Starting position of the raycast (same height as the vehicle)
+        Vector3 startPosition = transform.position; // No vertical offset
+
+        // Calculate the forward direction and adjust it based on steering
+        Vector3 forwardDirection = transform.forward;
+
+        // Calculate the angle of curvature based on steering input
+        float turnAngle = steeringInput * curveAmount; // Steering affects curvature
+
+        // Calculate the position of the raycast point along the path
+        Vector3 raycastPoint = startPosition + forwardDirection * (currentSpeed * Time.deltaTime);
+
+        // Determine the raycast distance based on current speed
+        float raycastDistance = Mathf.Clamp(currentSpeed, 0.5f, 1.7f); // Set min and max distance based on speed
+
+        // Apply a rotation based on the turn angle
+        raycastPoint = Quaternion.Euler(0, turnAngle * 90f, 0) * forwardDirection * raycastDistance + startPosition;
+
+        // Perform the raycast
+        if (Physics.Raycast(startPosition, raycastPoint - startPosition, raycastDistance, detectionLayer))
+        {
+            Debug.DrawRay(startPosition, raycastPoint - startPosition, Color.red);
+            // Implement any logic for what happens when an obstacle is detected
+        }
+        else
+        {
+            Debug.DrawRay(startPosition, raycastPoint - startPosition, Color.green);
+        }
+    }
+
 
     // Coroutine to make a blinker blink
     IEnumerator BlinkerCoroutine(GameObject blinker)
@@ -300,5 +339,10 @@ public class VehicleControllerWithGears : MonoBehaviour
     public bool GetIsRightBlinkerOn()
     {
         return isRightBlinkerOn;
+    }
+
+    public float GetAcceleration()
+    {
+        return currentAcceleration;
     }
 }

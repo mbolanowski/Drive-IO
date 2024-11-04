@@ -39,4 +39,9 @@ public class VechicleManager : MonoBehaviour
         if(GetIsLeftBlinkerOn() || GetIsRightBlinkerOn()) return true;
         else return false;
     }
+
+    public float GetAcceleration()
+    {
+        return vc.GetAcceleration();
+    }
 }

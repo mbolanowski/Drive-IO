@@ -12,21 +12,25 @@ public class SpeedLimit : MonoBehaviour
 
     private void OnTriggerStay(Collider other)
     {
-        // Increment the timer by the time that has passed since the last frame
-        timeSinceLastCheck += Time.deltaTime;
-
-        // Check if 5 seconds have passed
-        if (timeSinceLastCheck >= 2f)
+        int layer = other.gameObject.layer;
+        if (layer == LayerMask.NameToLayer("Player"))
         {
-            // Check the vehicle's current speed against the speed limit
-            if ((vc.GetCurrentSpeed() * playerManager._speedMultiplier) > _speedLimit)
-            {
-                playerManager.AddIncident(); // Add incident if speed exceeds limit
-                Debug.Log("You've exceeded the speed limit!");
-            }
+            // Increment the timer by the time that has passed since the last frame
+            timeSinceLastCheck += Time.deltaTime;
 
-            // Reset the timer after checking
-            timeSinceLastCheck = 0f;
+            // Check if 5 seconds have passed
+            if (timeSinceLastCheck >= 2f)
+            {
+                // Check the vehicle's current speed against the speed limit
+                if ((vc.GetCurrentSpeed() * playerManager._speedMultiplier) > _speedLimit)
+                {
+                    playerManager.AddIncident(); // Add incident if speed exceeds limit
+                    Debug.Log("You've exceeded the speed limit!");
+                }
+
+                // Reset the timer after checking
+                timeSinceLastCheck = 0f;
+            }
         }
     }
 }

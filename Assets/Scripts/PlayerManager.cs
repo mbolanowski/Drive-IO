@@ -10,7 +10,9 @@ public class PlayerManager : MonoBehaviour
 
     public float _speedMultiplier = 12f;
 
-    public bool isInLeftLane = false;
+    public string lanePosition;
+
+    public bool _hasRightOfWay = false;
 
     public void AddIncident()
     {
@@ -19,7 +21,7 @@ public class PlayerManager : MonoBehaviour
 
     public int GetIncidents()
     {
-    return _incidents; 
+        return _incidents;
     }
 
     private void Update()
@@ -27,13 +29,23 @@ public class PlayerManager : MonoBehaviour
         incidentCount.text = "Wykroczenia: " + _incidents.ToString();
     }
 
-    public bool GetIsInLeftLane()
+    public string GetCurrentLane()
     {
-        return isInLeftLane;
+        return lanePosition;
     }
 
-    public void SetIsInLeftLane(bool set)
+    public void SetCurrentLane(string set)
     {
-        isInLeftLane = set;
+        lanePosition = set;
+    }
+
+    public void SetHasRightOfWay(bool set)
+    {
+        _hasRightOfWay = set;
+    }
+
+    public bool GetHasRightOfWay()
+    {
+        return _hasRightOfWay;
     }
 }

@@ -11,25 +11,29 @@ public class TrafficLightsChange : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        // Get the forward vector of the trigger (this object)
-        Vector3 triggerForward = transform.forward;
-
-        // Get the forward vector of the object that entered the trigger
-        Vector3 objectForward = other.transform.forward;
-
-        // Calculate the angle between the two forward vectors
-        float angle = Vector3.Angle(triggerForward, objectForward);
-
-        // Check if the angle is within the defined tolerance
-        if (angle <= angleTolerance)
+        int layer = other.gameObject.layer;
+        if (layer == LayerMask.NameToLayer("Player"))
         {
-            LightColor lightColor = transform.parent.GetComponent<TrafficLights>().activeLight;
-            if (lightColor != null)
+            // Get the forward vector of the trigger (this object)
+            Vector3 triggerForward = transform.forward;
+
+            // Get the forward vector of the object that entered the trigger
+            Vector3 objectForward = other.transform.forward;
+
+            // Calculate the angle between the two forward vectors
+            float angle = Vector3.Angle(triggerForward, objectForward);
+
+            // Check if the angle is within the defined tolerance
+            if (angle <= angleTolerance)
             {
-                if (lightColor == LightColor.Red)
+                LightColor lightColor = transform.parent.GetComponent<TrafficLights>().activeLight;
+                if (lightColor != null)
                 {
-                    Debug.Log("You crossed during a red light!");
-                    pm.AddIncident();
+                    if (lightColor == LightColor.Red)
+                    {
+                        Debug.Log("You crossed during a red light!");
+                        pm.AddIncident();
+                    }
                 }
             }
         }
