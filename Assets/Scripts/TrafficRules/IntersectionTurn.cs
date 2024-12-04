@@ -13,6 +13,18 @@ public class IntersectionTurn : MonoBehaviour
     public bool straightAllowed = true;
     public bool uTurnAllowed = true;
 
+    private void Start()
+    {
+        if (pm == null)
+        {
+            pm = GameObject.Find("PlayerManager").GetComponent<PlayerManager>();
+        }
+        if (vm == null)
+        {
+            vm = GameObject.Find("VechicleManager").GetComponent<VechicleManager>();
+        }
+    }
+
     private void OnTriggerEnter(Collider other)
     {
         int layer = other.gameObject.layer;

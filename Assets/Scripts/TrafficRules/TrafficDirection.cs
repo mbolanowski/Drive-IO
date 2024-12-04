@@ -12,6 +12,13 @@ public class TriggerDirectionCheck : MonoBehaviour
 
     public bool rightOfWay = false;
 
+    private void Start()
+    {
+        if (playerManager == null)
+        {
+            playerManager = GameObject.Find("PlayerManager").GetComponent<PlayerManager>();
+        }
+    }
     private void OnTriggerStay(Collider other)
     {
         int layer = other.gameObject.layer;

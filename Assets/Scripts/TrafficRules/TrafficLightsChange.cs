@@ -8,7 +8,13 @@ public class TrafficLightsChange : MonoBehaviour
     public float angleTolerance = 15f; // in degrees
 
     public PlayerManager pm;
-
+    private void Start()
+    {
+        if (pm == null)
+        {
+            pm = GameObject.Find("PlayerManager").GetComponent<PlayerManager>();
+        }
+    }
     private void OnTriggerEnter(Collider other)
     {
         int layer = other.gameObject.layer;
