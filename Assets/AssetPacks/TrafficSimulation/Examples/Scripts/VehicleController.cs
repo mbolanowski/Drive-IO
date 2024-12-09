@@ -17,6 +17,6 @@ public class VehicleController : MonoBehaviour
         float steering = Input.GetAxis("Horizontal");
         float brake = Input.GetKey(KeyCode.Space) ? 1 : 0;
 
-        wheelDrive.Move(acc, steering, brake);
+        //wheelDrive.Move(acc, steering, brake);
     }
 }

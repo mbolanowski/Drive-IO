@@ -13,6 +13,8 @@ public class VehicleControllerWithGears : MonoBehaviour
     public float baseDecelerationRate = 5f;    // Base rate of deceleration
     public float maxDecelerationRate = 20f;    // Maximum deceleration rate
     public float horizontalDrag = 0.98f;       // Simulate horizontal friction and resistance
+    public float horizontalXDrag = 0.94f;
+    public float horizontalZDrag = 0.94f;
     public float verticalDrag = 0.99f;         // Simulate vertical friction and resistance
     public float currentSpeed = 0f;            // Variable to store current speed
     public int currentGear = 0;               // Start at gear 1 (index 0)
@@ -76,151 +78,145 @@ public class VehicleControllerWithGears : MonoBehaviour
 
     void FixedUpdate()
     {
-        // Gradually increase the acceleration to make it ramp up smoothly when W is pressed
         if (moveInput > 0.1f)
         {
-            // Increase acceleration when pressing W
+            // Forward movement
             currentAcceleration = Mathf.MoveTowards(currentAcceleration, gearAcceleration[currentGear], accelerationRate * Time.fixedDeltaTime);
-            decelerationTime = 0f; // Reset deceleration timer when accelerating
+            isSKeyReleased = true; // Allow reversing again after moving forward
+            decelerationTime = 0f; // Reset deceleration timer
             isDecelerating = false; // Reset deceleration state
-            isSKeyReleased = true; // Allow reversing again
         }
         else if (moveInput < -0.1f)
         {
-            if (currentGear == gearAcceleration.Length - 1) // Reverse gear
+            if (rb.velocity.magnitude < 0.1f)
             {
-                if (!isSKeyReleased)
-                {
-                    currentAcceleration = 0f;
-                }
-                // Only allow reversing if the S key has been released after braking
-                if (isSKeyReleased)
-                {
-                    // Apply reversing logic
-                    currentAcceleration = Mathf.MoveTowards(currentAcceleration, -gearAcceleration[currentGear], accelerationRate * Time.fixedDeltaTime);
-                    isDecelerating = false; // Reset deceleration state
-                }
+                // Begin reversing when stationary
+                currentGear = gearAcceleration.Length - 1; // Switch to reverse gear
+                currentAcceleration = Mathf.MoveTowards(currentAcceleration, -gearAcceleration[currentGear], accelerationRate * Time.fixedDeltaTime);
             }
-            else if (currentGear >= 0 && currentGear < gearAcceleration.Length - 1) // Forward gears
+            else if (currentGear == gearAcceleration.Length - 1) // Reverse gear
             {
-                // Set deceleration state to true when in forward gears
+                currentAcceleration = Mathf.MoveTowards(currentAcceleration, -gearAcceleration[currentGear], accelerationRate * Time.fixedDeltaTime);
+            }
+            else
+            {
+                // Apply braking to decelerate to stop
+                currentAcceleration = Mathf.MoveTowards(currentAcceleration, 0f, baseDecelerationRate * 2.0f * Time.fixedDeltaTime);
                 isDecelerating = true;
-
-                // Increase deceleration time while S is pressed
-                decelerationTime += Time.fixedDeltaTime;
-
-                // Calculate the current deceleration rate based on how long S has been pressed
-                float currentDecelerationRate = Mathf.Lerp(baseDecelerationRate, maxDecelerationRate, decelerationTime / maxDecelerationTime); // 5 seconds max
-
-                // Decrease acceleration based on the current deceleration rate
-                currentAcceleration = Mathf.MoveTowards(currentAcceleration, -gearAcceleration[currentGear], currentDecelerationRate * Time.fixedDeltaTime);
-
-                // Mark that the S key has not been released yet
-                isSKeyReleased = false; // Mark that the S key has not been released yet
             }
         }
+        else
+        {
+            // Neutral state (no input)
+            currentAcceleration = Mathf.MoveTowards(currentAcceleration, 0f, baseDecelerationRate * 0.5f * Time.fixedDeltaTime);
+            isDecelerating = true;
+        }
 
-        // Apply the acceleration to move the vehicle forward or backward
+        // Apply force for movement
         Vector3 force = transform.forward * currentAcceleration;
         rb.AddForce(force);
 
-        // Limit the speed of the vehicle
-        Vector3 velocity = new Vector3(rb.velocity.x, 0, rb.velocity.z); // Ignore Y-axis velocity
+        // Limit speed based on gear
+        Vector3 velocity = new Vector3(rb.velocity.x, 0, rb.velocity.z);
         if (currentGear < gearAcceleration.Length - 1)
         {
-            // Forward gears
             velocity = Vector3.ClampMagnitude(velocity, maxSpeed);
         }
         else
         {
-            // Reverse gear
             velocity = Vector3.ClampMagnitude(velocity, reverseSpeedLimit);
         }
-        rb.velocity = new Vector3(velocity.x, rb.velocity.y, velocity.z); // Apply new velocity
+        rb.velocity = new Vector3(velocity.x, rb.velocity.y, velocity.z);
 
-        // Update the current speed (magnitude of velocity in XZ plane)
+        // Update current speed
         currentSpeed = velocity.magnitude;
 
-        // Reset the current acceleration if the speed is 0 while holding S
-        if (currentSpeed <= 0f && moveInput < -0.1f && currentGear != gearAcceleration.Length - 1)
+        // Apply drag and dampening
+        ApplyDragAndDampening();
+
+        // Handle steering
+        HandleSteering();
+
+        // Update gear based on speed
+        UpdateGear();
+    }
+
+    void UpdateGear()
+    {
+        float speed = new Vector3(rb.velocity.x, 0, rb.velocity.z).magnitude;
+        bool isMovingForward = Vector3.Dot(rb.velocity, transform.forward) > 0;
+
+        if (moveInput > 0.1f && currentGear == gearAcceleration.Length - 1 && isMovingForward)
         {
-            currentAcceleration = 0f; // Reset acceleration when speed reaches 0 and S is pressed in forward gear
+            // Switch to first gear if moving forward from reverse
+            currentGear = 0;
         }
+        else if (moveInput < -0.1f && isSKeyReleased && currentGear != gearAcceleration.Length - 1 && !isMovingForward)
+        {
+            // Switch to reverse gear if moving backward
+            currentGear = gearAcceleration.Length - 1;
+        }
+        else if (isMovingForward)
+        {
+            // Handle forward gear shifting
+            if (currentGear < gearSpeedLimits.Length && speed > gearSpeedLimits[currentGear])
+            {
+                currentGear++;
+            }
+            else if (currentGear > 0 && speed < gearSpeedLimits[currentGear - 1])
+            {
+                currentGear--;
+            }
+        }
+        else
+        {
+            // Safeguard: Reset to reverse gear if moving backward
+            if (currentGear < gearAcceleration.Length - 1 && speed < gearSpeedLimits[0])
+            {
+                currentGear = gearAcceleration.Length - 1;
+            }
+        }
+    }
 
-        // Apply horizontal drag (X and Z components)
+    void ApplyDragAndDampening()
+    {
         Vector3 horizontalVelocity = new Vector3(rb.velocity.x, 0, rb.velocity.z);
-        horizontalVelocity *= horizontalDrag; // Apply horizontal drag
-        rb.velocity = new Vector3(horizontalVelocity.x, rb.velocity.y, horizontalVelocity.z); // Update horizontal velocity
+        horizontalVelocity.x *= horizontalXDrag;
+        horizontalVelocity.z *= horizontalZDrag;
+        rb.velocity = new Vector3(horizontalVelocity.x, rb.velocity.y, horizontalVelocity.z);
 
-        // Apply vertical drag (Y component)
-        float verticalVelocity = rb.velocity.y * verticalDrag; // Apply vertical drag
-        rb.velocity = new Vector3(rb.velocity.x, verticalVelocity, rb.velocity.z); // Update vertical velocity
+        float verticalVelocity = rb.velocity.y * verticalDrag;
+        rb.velocity = new Vector3(rb.velocity.x, verticalVelocity, rb.velocity.z);
 
-        // Steering (rotate the vehicle based on input and speed)
+        Vector3 localVelocity = transform.InverseTransformDirection(rb.velocity);
+        localVelocity.x *= 0.99f;
+        localVelocity.z *= 0.99f;
+        rb.velocity = transform.TransformDirection(localVelocity);
+
+        Vector3 angularVelocity = rb.angularVelocity * 0.9f;
+        rb.angularVelocity = angularVelocity;
+    }
+
+    void HandleSteering()
+    {
         if (Mathf.Abs(steeringInput) > 0.1f)
         {
-            // Adjust the rotation around Y-axis for steering based on the current gear
+            // Determine if the car is actually reversing
+            bool isReversing = Vector3.Dot(rb.velocity, transform.forward) < 0;
+
             float turnInput = steeringInput;
 
-            // Reverse steering input when in reverse gear
-            if (currentGear == gearAcceleration.Length - 1) // Check if in reverse gear
+            // Reverse steering direction only when actually reversing
+            if (currentGear == gearAcceleration.Length - 1 && isReversing)
             {
-                turnInput = -steeringInput; // Invert the steering input
+                turnInput = -steeringInput;
             }
 
             float turn = turnInput * gearSteering[currentGear] * rb.velocity.magnitude * Time.fixedDeltaTime;
             rb.MoveRotation(rb.rotation * Quaternion.Euler(0f, turn, 0f));
         }
-
-        // Update gear based on speed and input
-        UpdateGear();
     }
 
-    // Update the current gear based on speed and input
-    void UpdateGear()
-    {
-        // Get the vehicle's speed in XZ plane
-        float speed = new Vector3(rb.velocity.x, 0, rb.velocity.z).magnitude;
-
-        // Determine if moving forward or backward
-        bool isMovingForward = Vector3.Dot(rb.velocity, transform.forward) > 0;
-
-        // If moving forward, handle gear shifting for forward gears
-        if (isMovingForward)
-        {
-            // Shift up gears based on speed (ensure we don't go beyond the last forward gear)
-            if (currentGear < gearSpeedLimits.Length && speed > gearSpeedLimits[currentGear] && currentGear < gearSpeedLimits.Length - 1)
-            {
-                currentGear++;
-            }
-
-            // Shift down gears if speed drops (ensure we don't access below the first gear)
-            if (currentGear > 0 && speed < gearSpeedLimits[currentGear - 1])
-            {
-                currentGear--;
-            }
-
-            // If moving forward but in reverse gear, switch to the first forward gear
-            if (currentGear == gearAcceleration.Length - 1)
-            {
-                currentGear = 0;
-            }
-        }
-        // If moving backward or starting to move backward, switch to reverse gear
-        else
-        {
-            if (moveInput < -0.1f && currentGear != gearAcceleration.Length - 1)
-            {
-                currentGear = gearAcceleration.Length - 1; // Reverse gear
-            }
-
-            // Safeguard: If moving backward but in a forward gear, switch to reverse gear
-            if (currentGear < gearAcceleration.Length - 1 && speed < gearSpeedLimits[0])
-            {
-                currentGear = gearAcceleration.Length - 1; // Reverse gear
-            }
-        }
-    }
 
     void HandleBlinkers()
     {
@@ -320,6 +316,31 @@ public class VehicleControllerWithGears : MonoBehaviour
             blinker.SetActive(isActive);
         }
     }
+
+    void OnCollisionEnter(Collision collision)
+    {
+        // Calculate the relative velocity at the point of collision
+        float collisionImpact = collision.relativeVelocity.magnitude;
+
+        // Determine speed reduction factor based on impact (e.g., stronger impact = greater reduction)
+        float reductionFactor = Mathf.Clamp(collisionImpact / 2f, 0.1f, 1f);
+
+        // Reduce current speed
+        float reducedSpeed = currentSpeed * (1 - reductionFactor);
+        currentSpeed = Mathf.Max(reducedSpeed, 0f); // Ensure speed doesn't go negative
+
+        float reducedAcceleration = currentAcceleration * (1 - reductionFactor);
+        currentAcceleration = Mathf.Max(reducedAcceleration, 0f);
+
+        // Optional: Update the Rigidbody's velocity to reflect the reduced speed
+        Vector3 velocity = rb.velocity.normalized * currentSpeed;
+        rb.velocity = new Vector3(velocity.x, rb.velocity.y, velocity.z);
+
+        // Optional: Log or visualize the impact
+        Debug.Log($"Collision detected with {collision.gameObject.name}. Impact: {collisionImpact}, Speed reduced by: {reductionFactor * 100}%.");
+    }
+
+
 
     public int GetCurrentGear()
     {

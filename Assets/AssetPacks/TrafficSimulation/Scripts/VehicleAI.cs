@@ -3,6 +3,7 @@
 
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace TrafficSimulation {
@@ -34,6 +35,11 @@ namespace TrafficSimulation {
         [Tooltip("Determine when the vehicle has reached its target. Can be used to \"anticipate\" earlier the next waypoint (the higher this number his, the earlier it will anticipate the next waypoint)")]
         public float waypointThresh = 6;
 
+        [Tooltip("Distance before checking for the next turn.")]
+        public float distanceTresh = 6;
+
+        [Tooltip("How much the car is planning to turn")]
+        public float futureSteering = 0.0f;
 
         [Header("Radar")]
 
@@ -52,12 +58,20 @@ namespace TrafficSimulation {
         [Tooltip("If detected vehicle is below this distance, ego vehicle will stop")]
         public float emergencyBrakeThresh = 2f;
 
+        [Tooltip("If detected vehicle is below this distance at intersection, the vehicle will stop")]
+        public float intersectionBrake = 2f;
+
         [Tooltip("If detected vehicle is below this distance (and above, above distance), ego vehicle will slow down")]
         public float slowDownThresh = 4f;
 
-        [HideInInspector] public Status vehicleStatus = Status.GO;
+        private float timeSinceLastCheck = 0f;
+
+        [SerializeField] public Status vehicleStatus = Status.GO;
 
         private WheelDrive wheelDrive;
+        private CarsManager cm;
+        private VechicleManager vm;
+        private PlayerManager pm;
         private float initMaxSpeed = 0;
         private int pastTargetSegment = -1;
         private Target currentTarget;
@@ -67,15 +81,23 @@ namespace TrafficSimulation {
         {
             wheelDrive = this.GetComponent<WheelDrive>();
 
-            if(trafficSystem == null)
-                return;
+            cm = transform.parent.GetComponent<CarsManager>();
+            vm = cm.vm;
+            pm = cm.pm;
+
+            if (trafficSystem == null)
+            {
+                trafficSystem = GameObject.Find("Traffic System").GetComponent<TrafficSystem>();
+            }
 
             initMaxSpeed = wheelDrive.maxSpeed;
             SetWaypointVehicleIsOn();
         }
 
         void Update(){
-            if(trafficSystem == null)
+            timeSinceLastCheck += Time.deltaTime;
+
+            if (trafficSystem == null)
                 return;
 
             WaypointChecker();
@@ -119,14 +141,25 @@ namespace TrafficSimulation {
             //Calculate if there is a planned turn
             Transform targetTransform = trafficSystem.segments[currentTarget.segment].waypoints[currentTarget.waypoint].transform;
             Transform futureTargetTransform = trafficSystem.segments[futureTarget.segment].waypoints[futureTarget.waypoint].transform;
-            Vector3 futureVel = futureTargetTransform.position - targetTransform.position;
-            float futureSteering = Mathf.Clamp(this.transform.InverseTransformDirection(futureVel.normalized).x, -1, 1);
 
-            //Check if the car has to stop
-            if(vehicleStatus == Status.STOP){
+            // Distance to the current waypoint
+            float distanceToWaypoint = Vector3.Distance(this.transform.position, targetTransform.position);
+
+            if (distanceToWaypoint < distanceTresh * 2 || vehicleStatus == Status.SLOW_DOWN)  // Adjust multiplier as needed for when to consider "close"
+            {
+                Vector3 futureVel = futureTargetTransform.position - targetTransform.position;
+                futureSteering = Mathf.Clamp(this.transform.InverseTransformDirection(futureVel.normalized).x, -1, 1);
+            }
+            else
+            {
+                futureSteering = 0.0f;
+            }
+
+                //Check if the car has to stop
+                if (vehicleStatus == Status.STOP){
                 acc = 0;
                 brake = 1;
-                wheelDrive.maxSpeed = Mathf.Min(wheelDrive.maxSpeed / 2f, 5f);
+                wheelDrive.maxSpeed = 0f;
             }
             else{
                 
@@ -140,6 +173,11 @@ namespace TrafficSimulation {
                 if(futureSteering > .3f || futureSteering < -.3f){
                     wheelDrive.maxSpeed = Mathf.Min(wheelDrive.maxSpeed, wheelDrive.steeringSpeedMax);
                 }
+                else
+                {
+                    // Restore to original max speed if no sharp turn is planned
+                    wheelDrive.maxSpeed = initMaxSpeed;
+                }
 
                 //2. Check if there are obstacles which are detected by the radar
                 float hitDist;
@@ -148,8 +186,13 @@ namespace TrafficSimulation {
                 //Check if we hit something
                 if(obstacle != null){
 
+                    int layer = obstacle.gameObject.layer;
+
                     WheelDrive otherVehicle = null;
                     otherVehicle = obstacle.GetComponent<WheelDrive>();
+
+                    VehicleAI otherVehicleAI = null;
+                    otherVehicleAI = obstacle.GetComponent<VehicleAI>();
 
                     ///////////////////////////////////////////////////////////////
                     //Differenciate between other vehicles AI and generic obstacles (including controlled vehicle, if any)
@@ -157,8 +200,19 @@ namespace TrafficSimulation {
                         //Check if it's front vehicle
                         float dotFront = Vector3.Dot(this.transform.forward, otherVehicle.transform.forward);
 
+                        int otherTurn = 0;
+                        int thisTurn = 0;
+
+                        if (otherVehicleAI.futureSteering > 0.3f) otherTurn = 0;
+                        else if (otherVehicleAI.futureSteering < -0.3f) otherTurn = 1;
+                        else otherTurn = 2;
+
+                        if (this.GetComponent<VehicleAI>().futureSteering > 0.3f) thisTurn = 0;
+                        else if (this.GetComponent<VehicleAI>().futureSteering < -0.3f) thisTurn = 1;
+                        else thisTurn = 2;
+
                         //If detected front vehicle max speed is lower than ego vehicle, then decrease ego vehicle max speed
-                        if(otherVehicle.maxSpeed < wheelDrive.maxSpeed && dotFront > .8f){
+                        if (otherVehicle.maxSpeed < wheelDrive.maxSpeed && dotFront > .8f){
                             float ms = Mathf.Max(wheelDrive.GetSpeedMS(otherVehicle.maxSpeed) - .5f, .1f);
                             wheelDrive.maxSpeed = wheelDrive.GetSpeedUnit(ms);
                         }
@@ -177,26 +231,171 @@ namespace TrafficSimulation {
                             wheelDrive.maxSpeed = Mathf.Max(wheelDrive.maxSpeed / 2f, wheelDrive.minSpeed);
 
                             //Check if the vehicle we are close to is located on the right or left then apply according steering to try to make it move
-                            float dotRight = Vector3.Dot(this.transform.forward, otherVehicle.transform.right);
+                            //float dotRight = Vector3.Dot(this.transform.forward, otherVehicle.transform.right);
                             //Right
-                            if(dotRight > 0.1f) steering = -.3f;
+                            //if(dotRight > 0.1f) steering = -.3f;
                             //Left
-                            else if(dotRight < -0.1f) steering = .3f;
+                            //else if(dotRight < -0.1f) steering = .3f;
                             //Middle
-                            else steering = -.7f;
+                            //else steering = -.7f;
                         }
-
                         //If the two vehicles are getting close, slow down their speed
                         else if(hitDist < slowDownThresh){
                             acc = .5f;
                             brake = 0f;
                             //wheelDrive.maxSpeed = Mathf.Max(wheelDrive.maxSpeed / 1.5f, wheelDrive.minSpeed);
                         }
+                        if (otherVehicleAI.vehicleStatus == Status.SLOW_DOWN && this.GetComponent<VehicleAI>().vehicleStatus == Status.SLOW_DOWN)
+                        {
+                            //Debug.Log("Other vehicle is turning: " + otherTurn + "And this is turning: " + thisTurn);
+                            // Check for priority based on turn direction
+                            if (otherTurn == 1 && thisTurn != 1)
+                            { // If the other vehicle is turning right, priority over any other turn
+                                if (hitDist < intersectionBrake)
+                                {
+                                    acc = 0;
+                                    brake = 1;
+                                }
+                                else
+                                {
+                                    //wheelDrive.maxSpeed = otherVehicle.maxSpeed * 1.2f;
+                                }
+                            }
+                            else if (otherTurn == 2 && thisTurn == 0)
+                            { // If the other vehicle is going straight and we are turning left
+                                if (hitDist < intersectionBrake)
+                                {
+                                    acc = 0;
+                                    brake = 1;
+                                }
+                                else
+                                {
+                                    //wheelDrive.maxSpeed = otherVehicle.maxSpeed * 1.2f;
+                                }
+                            }
+                            else if (otherTurn == 0 && thisTurn != 0)
+                            { // If the other vehicle is turning left, it never has priority
+                                if (hitDist < intersectionBrake)
+                                {
+                                    acc = 0;
+                                    brake = 1;
+                                }
+                                else
+                                {
+                                    //wheelDrive.maxSpeed = otherVehicle.maxSpeed * 1.5f;
+                                }
+                            }
+                            else if (otherTurn == 2 && thisTurn == 2)
+                            { // If both are going straight, no priority change
+                            }
+                        }
                     }
+                    else if (layer == LayerMask.NameToLayer("Player"))
+                    {
+                        float dotFront = Vector3.Dot(this.transform.forward, obstacle.transform.forward);
 
+                        int thisTurn = 0;
+                        if (this.GetComponent<VehicleAI>().futureSteering > 0.3f) thisTurn = 0;
+                        else if (this.GetComponent<VehicleAI>().futureSteering < -0.3f) thisTurn = 1;
+                        else thisTurn = 2;
+
+                        string otherTurn = "";
+                        otherTurn = vm._declaredDirection;
+
+                        if (vm.GetMaxSpeed() * 5f < wheelDrive.maxSpeed && dotFront > .8f)
+                        {
+                            float ms = Mathf.Max(wheelDrive.GetSpeedMS(vm.GetMaxSpeed()) - .5f, .1f);
+                            wheelDrive.maxSpeed = wheelDrive.GetSpeedUnit(ms);
+                        }
+
+                        if (hitDist < emergencyBrakeThresh && dotFront > .8f)
+                        {
+                            acc = 0;
+                            brake = 1;
+                            wheelDrive.maxSpeed = Mathf.Max(wheelDrive.maxSpeed / 2f, wheelDrive.minSpeed);
+                        }
+
+                        else if (hitDist < emergencyBrakeThresh && dotFront <= .8f)
+                        {
+                            acc = -.3f;
+                            brake = 0f;
+                            wheelDrive.maxSpeed = Mathf.Max(wheelDrive.maxSpeed / 2f, wheelDrive.minSpeed);
+                        }
+                        else if (hitDist < slowDownThresh)
+                        {
+                            acc = .5f;
+                            brake = 0f;
+                        }
+
+                        if (this.GetComponent<VehicleAI>().vehicleStatus == Status.SLOW_DOWN)
+                        {
+                            if (otherTurn == "right" && thisTurn != 0)
+                            {
+                                if (hitDist < intersectionBrake)
+                                {
+                                    acc = 0;
+                                    brake = 1;
+                                    
+                                }
+                                else
+                                {
+                                }
+                            }
+                            else if (otherTurn == "straight" && thisTurn == 1)
+                            {
+                                if (hitDist < intersectionBrake)
+                                {
+                                    acc = 0;
+                                    brake = 1;
+                                }
+                                else
+                                {
+
+                                }
+                            }
+                            else if (otherTurn == "straight" && thisTurn == 0)
+                            {
+                                if (timeSinceLastCheck >= 5f)
+                                {
+                                    pm.AddIncident();
+                                    Debug.Log("Wymuszenie pierwszeñstwa.");
+                                    timeSinceLastCheck = 0f;
+                                }
+                                if (hitDist < intersectionBrake)
+                                {
+                                    acc = 0;
+                                    brake = 1;
+                                }
+                                else
+                                {
+
+                                }
+                            }
+                            else if (otherTurn == "left" && thisTurn != 1)
+                            {
+                                timeSinceLastCheck += Time.deltaTime;
+                                if (timeSinceLastCheck >= 5f)
+                                {
+                                    pm.AddIncident();
+                                    Debug.Log("Wymuszenie pierwszeñstwa.");
+                                    timeSinceLastCheck = 0f;
+                                }
+                                if (hitDist < intersectionBrake)
+                                {
+                                    acc = 0;
+                                    brake = 1;
+                                }
+                                else
+                                {
+
+                                }
+                            }
+                        }
+                    }
                     ///////////////////////////////////////////////////////////////////
                     // Generic obstacles
-                    else{
+                    else
+                            {
                         //Emergency brake if getting too close
                         if(hitDist < emergencyBrakeThresh){
                             acc = 0;
@@ -220,8 +419,7 @@ namespace TrafficSimulation {
 
             }
 
-            //Move the car
-            wheelDrive.Move(acc, steering, brake);
+            wheelDrive.Move(acc, steering, brake, vehicleStatus);
         }
 
 
@@ -256,7 +454,8 @@ namespace TrafficSimulation {
 
             //Detect hit only on the autonomous vehicle layer
             int layer = 1 << LayerMask.NameToLayer("AutonomousVehicle");
-            int finalMask = layer;
+            int playerLayer = 1 << LayerMask.NameToLayer("Player");
+            int finalMask = layer | playerLayer;
 
             foreach(string layerName in trafficSystem.collisionLayers){
                 int id = 1 << LayerMask.NameToLayer(layerName);

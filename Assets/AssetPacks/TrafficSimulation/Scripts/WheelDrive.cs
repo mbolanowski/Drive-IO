@@ -1,20 +1,19 @@
-﻿// Traffic Simulation
-// https://github.com/mchrbn/unity-traffic-simulation
-// Based on the Vehicle Tools package from Unity
-
-using UnityEngine;
+﻿using UnityEngine;
 using System;
 
-namespace TrafficSimulation{
+namespace TrafficSimulation
+{
     [Serializable]
-    public enum DriveType{
+    public enum DriveType
+    {
         RearWheelDrive,
         FrontWheelDrive,
         AllWheelDrive
     }
 
     [Serializable]
-    public enum UnitType{
+    public enum UnitType
+    {
         KMH,
         MPH
     }
@@ -24,117 +23,111 @@ namespace TrafficSimulation{
         [Tooltip("Downforce applied to the vehicle")]
         public float downForce = 100f;
 
-        [Tooltip("Maximum steering angle of the wheels")]
-        public float maxAngle = 30f;
+        [Tooltip("Maximum steering angle (degrees) per second")]
+        public float maxSteeringAngle = 30f;
 
-        [Tooltip("Speed at which we will reach the above steering angle (lerp)")]
+        [Tooltip("Speed at which we interpolate steering (lerp)")]
         public float steeringLerp = 5f;
-        
-        [Tooltip("Max speed (in unit choosen below) when the vehicle is about to steer")]
+
+        [Tooltip("Max speed (in the unit chosen below) when the vehicle is about to steer")]
         public float steeringSpeedMax = 20f;
 
-        [Tooltip("Maximum torque applied to the driving wheels")]
-        public float maxTorque = 300f;
+        [Tooltip("Minimum speed in the chosen unit")]
+        public float minSpeed = 5f;
 
-        [Tooltip("Maximum brake torque applied to the driving wheels")]
-        public float brakeTorque = 30000f;
+        [Tooltip("Maximum speed in the chosen unit")]
+        public float maxSpeed = 50f;
+
+        [Tooltip("Acceleration force applied to the vehicle")]
+        public float accelerationForce = 1000f;
+
+        [Tooltip("Braking force applied to the vehicle")]
+        public float brakeForce = 500f;
+
+        [Tooltip("Lateral stability factor (higher = less sliding)")]
+        public float lateralStabilityFactor = 5f;
 
         [Tooltip("Unit Type")]
         public UnitType unitType;
 
-        [Tooltip("Min Speed - when driving (not including stops/brakes), in the unit choosen above. Should be > 0.")]
-        public float minSpeed = 5;
-
-        [Tooltip("Max Speed in the unit choosen above")]
-        public float maxSpeed = 50;
-
-        [Tooltip("Drag the wheel shape here.")]
-        public GameObject leftWheelShape;
-        public GameObject rightWheelShape;
-
-        [Tooltip("Whether you want to animate the wheels")]
-        public bool animateWheels = true;
-        
-        [Tooltip("The vehicle's drive type: rear-wheels drive, front-wheels drive or all-wheels drive.")]
-        public DriveType driveType;
-
-        private WheelCollider[] wheels;
+        private Rigidbody rb;
         private float currentSteering = 0f;
 
-        void OnEnable(){
-            wheels = GetComponentsInChildren<WheelCollider>();
-
-            for (int i = 0; i < wheels.Length; ++i) 
-            {
-                var wheel = wheels [i];
-
-                // Create wheel shapes only when needed.
-                if (leftWheelShape != null && wheel.transform.localPosition.x < 0)
-                {
-                    var ws = Instantiate (leftWheelShape);
-                    ws.transform.parent = wheel.transform;
-                }
-                else if(rightWheelShape != null && wheel.transform.localPosition.x > 0){
-                    var ws = Instantiate(rightWheelShape);
-                    ws.transform.parent = wheel.transform;
-                }
-
-                wheel.ConfigureVehicleSubsteps(10, 1, 1);
-            }
-        }
-
-        public void Move(float _acceleration, float _steering, float _brake)
+        void Awake()
         {
-
-            float nSteering = Mathf.Lerp(currentSteering, _steering, Time.deltaTime * steeringLerp);
-            currentSteering = nSteering;
-
-            Rigidbody rb = this.GetComponent<Rigidbody>();
-
-            float angle = maxAngle * nSteering;
-            float torque = maxTorque * _acceleration;
-
-            float handBrake = _brake > 0 ? brakeTorque : 0;
-
-            foreach (WheelCollider wheel in wheels){
-                // Steer front wheels only
-                if (wheel.transform.localPosition.z > 0) wheel.steerAngle = angle;
-
-                if (wheel.transform.localPosition.z < 0) wheel.brakeTorque = handBrake;
-
-                if (wheel.transform.localPosition.z < 0 && driveType != DriveType.FrontWheelDrive) wheel.motorTorque = torque;
-
-                if (wheel.transform.localPosition.z >= 0 && driveType != DriveType.RearWheelDrive) wheel.motorTorque = torque;
-
-
-                // Update visual wheels if allowed
-                if(animateWheels){
-                    Quaternion q;
-                    Vector3 p;
-                    wheel.GetWorldPose(out p, out q);
-
-                    Transform shapeTransform = wheel.transform.GetChild (0);
-                    shapeTransform.position = p;
-                    shapeTransform.rotation = q;
-                }
-            }
-
-
-            //Apply speed
-            float s = GetSpeedUnit(rb.velocity.magnitude);
-            if(s > maxSpeed) rb.velocity = GetSpeedMS(maxSpeed) * rb.velocity.normalized;
-
-            
-            //Apply downforce
-            rb.AddForce(-transform.up * downForce * rb.velocity.magnitude);
+            rb = GetComponent<Rigidbody>();
+            rb.useGravity = false; // Disable gravity for "air" driving
         }
 
-        public float GetSpeedMS(float _s){
+        public void Move(float _acceleration, float _steering, float _brake, Status currentStatus)
+        {
+            float currentSpeed = GetSpeedUnit(rb.velocity.magnitude);
+
+            // Steering effectiveness based on speed
+            float steeringEffectiveness = Mathf.Clamp01(steeringSpeedMax / currentSpeed);
+            float targetSteering = _steering * maxSteeringAngle * steeringEffectiveness;
+            currentSteering = Mathf.Lerp(currentSteering, targetSteering, Time.deltaTime * steeringLerp);
+
+            Quaternion steerRotation = Quaternion.Euler(0, currentSteering * Time.deltaTime, 0);
+            rb.MoveRotation(rb.rotation * steerRotation);
+
+            // Acceleration logic
+            if (_acceleration > 0)
+            {
+                Vector3 forwardForce = transform.forward * (_acceleration * accelerationForce);
+                rb.AddForce(forwardForce, ForceMode.Acceleration);
+            }
+
+            // Enforce minimum speed
+            if (currentStatus != Status.STOP && currentSpeed < minSpeed && _acceleration > 0)
+            {
+                float minSpeedForce = GetSpeedMS(minSpeed) - rb.velocity.magnitude;
+                rb.AddForce(transform.forward * minSpeedForce, ForceMode.VelocityChange);
+            }
+
+            // Braking logic
+            if (_brake > 0)
+            {
+                Vector3 brakeForceVector = -rb.velocity.normalized * (_brake * brakeForce);
+                rb.AddForce(brakeForceVector, ForceMode.Acceleration);
+            }
+
+            // Limit speed to maxSpeed
+            if (currentSpeed > maxSpeed)
+            {
+                rb.velocity = GetSpeedMS(maxSpeed) * rb.velocity.normalized;
+            }
+
+            // Apply downforce for stability
+            rb.AddForce(-transform.up * downForce * rb.velocity.magnitude);
+
+            // Apply lateral stability
+            ApplyLateralStabilization();
+        }
+
+        private void ApplyLateralStabilization()
+        {
+            // Get the vehicle's velocity in local space
+            Vector3 localVelocity = transform.InverseTransformDirection(rb.velocity);
+            
+            if (GetSpeedUnit(rb.velocity.magnitude) > 0.1f) // Only apply stabilization when moving
+            {
+                Vector3 lateralForce = -transform.right * (localVelocity.x * lateralStabilityFactor);
+                rb.AddForce(lateralForce, ForceMode.Acceleration);
+            }
+            // Align the velocity with the forward direction of the vehicle
+            Vector3 alignedVelocity = transform.forward * localVelocity.z;
+            rb.velocity = alignedVelocity + (transform.right * localVelocity.x * 0.1f); // Keep minimal lateral velocity for realism
+        }
+
+        public float GetSpeedMS(float _s)
+        {
             return unitType == UnitType.KMH ? _s / 3.6f : _s / 2.237f;
         }
 
-        public float GetSpeedUnit(float _s){
+        public float GetSpeedUnit(float _s)
+        {
             return unitType == UnitType.KMH ? _s * 3.6f : _s * 2.237f;
         }
-    }   
+    }
 }

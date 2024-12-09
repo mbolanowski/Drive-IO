@@ -44,4 +44,9 @@ public class VechicleManager : MonoBehaviour
     {
         return vc.GetAcceleration();
     }
+
+    public float GetMaxSpeed()
+    {
+        return vc.maxSpeed;
+    }
 }

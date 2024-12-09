@@ -43,9 +43,15 @@ public class FloatingText : MonoBehaviour
         // Optional: Keep the text facing the camera
         if (Camera.main != null)
         {
-            textMeshPro.transform.rotation = Quaternion.LookRotation(
-                textMeshPro.transform.position - Camera.main.transform.position
-            );
+            // Get the direction from the text to the camera
+            Vector3 directionToCamera = textMeshPro.transform.position - Camera.main.transform.position;
+
+            // Zero out the Y component to avoid rotating around the Y axis
+            directionToCamera.x = 0;
+            directionToCamera.z = 0;
+
+            // Adjust the rotation so the text faces the camera, but without rotating around the Y-axis
+            textMeshPro.transform.rotation = Quaternion.LookRotation(directionToCamera);
         }
     }
 }

@@ -66,7 +66,7 @@ namespace TrafficSimulation{
 
         void TriggerStop(GameObject _vehicle){
             VehicleAI vehicleAI = _vehicle.GetComponent<VehicleAI>();
-            
+
             //Depending on the waypoint threshold, the car can be either on the target segment or on the past segment
             int vehicleSegment = vehicleAI.GetSegmentVehicleIsIn();
 
@@ -93,7 +93,7 @@ namespace TrafficSimulation{
             vehiclesQueue.Remove(_vehicle);
 
             if(vehiclesQueue.Count > 0 && vehiclesInIntersection.Count == 0){
-                vehiclesQueue[0].GetComponent<VehicleAI>().vehicleStatus = Status.GO;
+                vehiclesQueue[0].GetComponent<VehicleAI>().vehicleStatus = Status.SLOW_DOWN;
             }
         }
 
@@ -106,7 +106,7 @@ namespace TrafficSimulation{
                 vehiclesQueue.Add(_vehicle);
             }
             else{
-                vehicleAI.vehicleStatus = Status.GO;
+                vehicleAI.vehicleStatus = Status.SLOW_DOWN;
             }
         }
 
@@ -136,7 +136,7 @@ namespace TrafficSimulation{
             foreach(GameObject vehicle in vehiclesQueue){
                 int vehicleSegment = vehicle.GetComponent<VehicleAI>().GetSegmentVehicleIsIn();
                 if(!IsRedLightSegment(vehicleSegment)){
-                    vehicle.GetComponent<VehicleAI>().vehicleStatus = Status.GO;
+                    vehicle.GetComponent<VehicleAI>().vehicleStatus = Status.SLOW_DOWN;
                     nVehiclesQueue.Remove(vehicle);
                 }
             }
