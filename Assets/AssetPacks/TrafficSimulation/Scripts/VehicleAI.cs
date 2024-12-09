@@ -4,6 +4,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using UnityEngine;
 
 namespace TrafficSimulation {
@@ -77,6 +78,14 @@ namespace TrafficSimulation {
         private Target currentTarget;
         private Target futureTarget;
 
+        public GameObject leftBlinker;
+        public GameObject rightBlinker;
+        // Variables to handle blinking state
+        private Coroutine leftBlinkerCoroutine;
+        private Coroutine rightBlinkerCoroutine;
+        private bool isLeftBlinkerOn = false;
+        private bool isRightBlinkerOn = false;
+
         void Start()
         {
             wheelDrive = this.GetComponent<WheelDrive>();
@@ -101,6 +110,7 @@ namespace TrafficSimulation {
                 return;
 
             WaypointChecker();
+            HandleBlinkers();
             MoveVehicle();
         }
 
@@ -145,7 +155,7 @@ namespace TrafficSimulation {
             // Distance to the current waypoint
             float distanceToWaypoint = Vector3.Distance(this.transform.position, targetTransform.position);
 
-            if (distanceToWaypoint < distanceTresh * 2 || vehicleStatus == Status.SLOW_DOWN)  // Adjust multiplier as needed for when to consider "close"
+            if (distanceToWaypoint < distanceTresh * 2 || vehicleStatus == Status.SLOW_DOWN) 
             {
                 Vector3 futureVel = futureTargetTransform.position - targetTransform.position;
                 futureSteering = Mathf.Clamp(this.transform.InverseTransformDirection(futureVel.normalized).x, -1, 1);
@@ -213,8 +223,9 @@ namespace TrafficSimulation {
 
                         //If detected front vehicle max speed is lower than ego vehicle, then decrease ego vehicle max speed
                         if (otherVehicle.maxSpeed < wheelDrive.maxSpeed && dotFront > .8f){
-                            float ms = Mathf.Max(wheelDrive.GetSpeedMS(otherVehicle.maxSpeed) - .5f, .1f);
-                            wheelDrive.maxSpeed = wheelDrive.GetSpeedUnit(ms);
+                            //float ms = Mathf.Max(wheelDrive.GetSpeedMS(otherVehicle.maxSpeed) - .5f, .1f);
+                            //wheelDrive.maxSpeed = wheelDrive.GetSpeedUnit(ms);
+                            wheelDrive.maxSpeed = otherVehicle.maxSpeed * 0.8f;
                         }
                         
                         //If the two vehicles are too close, and facing the same direction, brake the ego vehicle
@@ -231,13 +242,13 @@ namespace TrafficSimulation {
                             wheelDrive.maxSpeed = Mathf.Max(wheelDrive.maxSpeed / 2f, wheelDrive.minSpeed);
 
                             //Check if the vehicle we are close to is located on the right or left then apply according steering to try to make it move
-                            //float dotRight = Vector3.Dot(this.transform.forward, otherVehicle.transform.right);
+                            float dotRight = Vector3.Dot(this.transform.forward, otherVehicle.transform.right);
                             //Right
-                            //if(dotRight > 0.1f) steering = -.3f;
+                            if(dotRight > 0.1f) steering = .3f;
                             //Left
-                            //else if(dotRight < -0.1f) steering = .3f;
+                            else if(dotRight < -0.1f) steering = -.3f;
                             //Middle
-                            //else steering = -.7f;
+                            else steering = -.7f;
                         }
                         //If the two vehicles are getting close, slow down their speed
                         else if(hitDist < slowDownThresh){
@@ -427,6 +438,9 @@ namespace TrafficSimulation {
             GameObject detectedObstacle = null;
             float minDist = 1000f;
 
+            float speedFactor = Mathf.Clamp01(wheelDrive.maxSpeed * 0.5f / initMaxSpeed);
+            raySpacing = Mathf.RoundToInt(Mathf.Lerp(2f, 8f, 1 - speedFactor));
+
             float initRay = (raysNumber / 2f) * raySpacing;
             float hitDist =  -1f;
             for(float a=-initRay; a<=initRay; a+=raySpacing){
@@ -449,8 +463,6 @@ namespace TrafficSimulation {
         void CastRay(Vector3 _anchor, float _angle, Vector3 _dir, float _length, out GameObject _outObstacle, out float _outHitDistance){
             _outObstacle = null;
             _outHitDistance = -1f;
-
-            
 
             //Detect hit only on the autonomous vehicle layer
             int layer = 1 << LayerMask.NameToLayer("AutonomousVehicle");
@@ -523,6 +535,60 @@ namespace TrafficSimulation {
                     vehicleSegment = pastTargetSegment;
             }
             return vehicleSegment;
+        }
+
+        void HandleBlinkers()
+        {
+            // Left Arrow blinker
+            if (futureSteering < -0.6f && !isLeftBlinkerOn)
+            {
+                if (leftBlinkerCoroutine != null) StopCoroutine(leftBlinkerCoroutine); // Stop previous coroutine if running
+                isLeftBlinkerOn = true;
+                leftBlinkerCoroutine = StartCoroutine(BlinkerCoroutine(leftBlinker));
+            }
+
+            else if (futureSteering > 0.6f && !isRightBlinkerOn)
+            {
+                if (rightBlinkerCoroutine != null) StopCoroutine(rightBlinkerCoroutine); // Stop previous coroutine if running
+                isRightBlinkerOn = true;
+                rightBlinkerCoroutine = StartCoroutine(BlinkerCoroutine(rightBlinker));
+
+            }
+            
+            else if(futureSteering > -0.6f && futureSteering < 0.6f)
+            {
+                isLeftBlinkerOn = false;
+                isRightBlinkerOn = false;
+                if (rightBlinkerCoroutine != null)
+                {
+                    StopCoroutine(rightBlinkerCoroutine);
+                    SetBlinker(rightBlinker, false);
+                }
+                if (leftBlinkerCoroutine != null)
+                {
+                    StopCoroutine(leftBlinkerCoroutine);
+                    SetBlinker(leftBlinker, false);
+                }
+            }
+        }
+        IEnumerator BlinkerCoroutine(GameObject blinker)
+        {
+            while (true)
+            {
+                SetBlinker(blinker, true);   // Turn on blinker
+                yield return new WaitForSeconds(0.5f); // Wait for 0.5 seconds
+                SetBlinker(blinker, false);  // Turn off blinker
+                yield return new WaitForSeconds(0.5f); // Wait for 0.5 seconds
+            }
+        }
+
+        // Helper method to enable/disable blinker object
+        void SetBlinker(GameObject blinker, bool isActive)
+        {
+            if (blinker != null)
+            {
+                blinker.SetActive(isActive);
+            }
         }
     }
 }

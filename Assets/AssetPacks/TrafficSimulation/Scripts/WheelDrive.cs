@@ -53,6 +53,8 @@ namespace TrafficSimulation
         private Rigidbody rb;
         private float currentSteering = 0f;
 
+        public float currentSpeed;
+
         void Awake()
         {
             rb = GetComponent<Rigidbody>();
@@ -61,7 +63,7 @@ namespace TrafficSimulation
 
         public void Move(float _acceleration, float _steering, float _brake, Status currentStatus)
         {
-            float currentSpeed = GetSpeedUnit(rb.velocity.magnitude);
+            currentSpeed = GetSpeedUnit(rb.velocity.magnitude);
 
             // Steering effectiveness based on speed
             float steeringEffectiveness = Mathf.Clamp01(steeringSpeedMax / currentSpeed);
@@ -85,11 +87,14 @@ namespace TrafficSimulation
                 rb.AddForce(transform.forward * minSpeedForce, ForceMode.VelocityChange);
             }
 
-            // Braking logic
-            if (_brake > 0)
+            if (_brake > 0 && rb.velocity.magnitude > 0.1f) // Check if the car is moving
             {
                 Vector3 brakeForceVector = -rb.velocity.normalized * (_brake * brakeForce);
                 rb.AddForce(brakeForceVector, ForceMode.Acceleration);
+            }
+            else if(_brake > 0)
+            {
+                rb.velocity = Vector3.zero;
             }
 
             // Limit speed to maxSpeed
