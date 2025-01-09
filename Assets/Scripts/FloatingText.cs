@@ -12,13 +12,21 @@ public class FloatingText : MonoBehaviour
 
     private TextMeshPro textMeshPro;
 
+    private GameObject textObject;
+
     void Start()
     {
         // Create a new GameObject for the text
-        GameObject textObject = new GameObject("FloatingText");
+        textObject = new GameObject("FloatingText");
 
         // Attach the TextMeshPro component
         textMeshPro = textObject.AddComponent<TextMeshPro>();
+
+        AssignFontAndMaterial();
+    }
+
+    void Update()
+    {
 
         // Set the text properties
         textMeshPro.text = displayText;
@@ -36,10 +44,7 @@ public class FloatingText : MonoBehaviour
 
         // Adjust the rotation so the text faces the camera
         textObject.transform.rotation = Quaternion.identity;
-    }
 
-    void Update()
-    {
         // Optional: Keep the text facing the camera
         if (Camera.main != null)
         {
@@ -52,6 +57,33 @@ public class FloatingText : MonoBehaviour
 
             // Adjust the rotation so the text faces the camera, but without rotating around the Y-axis
             textMeshPro.transform.rotation = Quaternion.LookRotation(directionToCamera);
+        }
+    }
+
+    void AssignFontAndMaterial()
+    {
+        // Load the LiberationSans SDF font
+        TMP_FontAsset liberationSansFont = Resources.Load<TMP_FontAsset>("Fonts & Materials/LiberationSans SDF");
+
+        // Load the Drop Shadow material
+        Material dropShadowMaterial = Resources.Load<Material>("Fonts & Materials/LiberationSans SDF - Drop Shadow");
+
+        if (liberationSansFont != null)
+        {
+            textMeshPro.font = liberationSansFont;
+
+            if (dropShadowMaterial != null)
+            {
+                textMeshPro.fontMaterial = dropShadowMaterial; // Apply the Drop Shadow material
+            }
+            else
+            {
+                Debug.LogError("Drop Shadow material not found! Make sure it is located in a Resources folder.");
+            }
+        }
+        else
+        {
+            Debug.LogError("LiberationSans SDF font not found! Make sure it is located in a Resources folder.");
         }
     }
 }

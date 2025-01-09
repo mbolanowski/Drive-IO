@@ -18,6 +18,11 @@ public class VechicleManager : MonoBehaviour
     public bool straightAllowed = false;
     public bool uAllowed = false;
 
+    public int currentTileX = 0;
+    public int currentTileY = 0;
+
+    public Color vehicleColor;
+
     private void Update()
     {
         gearText.text = "Bieg: " + (vc.GetCurrentGear() + 1).ToString();
@@ -48,5 +53,21 @@ public class VechicleManager : MonoBehaviour
     public float GetMaxSpeed()
     {
         return vc.maxSpeed;
+    }
+
+    public void SetCurrentTile(int x, int y)
+    {
+        currentTileX = x;
+        currentTileY = y;
+    }
+
+    public int GetCurrentTileX()
+    {
+        return currentTileX;
+    }
+
+    public int GetCurrentTileY()
+    {
+        return currentTileY;
     }
 }

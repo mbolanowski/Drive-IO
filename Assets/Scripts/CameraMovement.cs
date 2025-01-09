@@ -1,0 +1,76 @@
+using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
+
+public class MoveGameObject : MonoBehaviour
+{
+    // The GameObject to move
+    public GameObject targetObject;
+    public VechicleManager vm;
+    public Minimap mm;
+
+    // The amount to subtract from the x position
+    private const float OffsetX = 13.62f;
+    private const float OffsetZ = 2.9942f;
+
+    private bool isInitialized = false;
+
+
+    private void Start()
+    {
+        // Mark as initialized after the first frame
+        StartCoroutine(InitializeAfterFrame());
+    }
+
+    private IEnumerator InitializeAfterFrame()
+    {
+        // Wait for the end of the frame
+        yield return new WaitForEndOfFrame();
+        isInitialized = true;
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.gameObject.layer == LayerMask.NameToLayer("Player"))
+        {
+            // Skip the first call if the object is not initialized
+            if (!isInitialized)
+        {
+            vm.SetCurrentTile(gameObject.name[0] - '0', gameObject.name[1] - '0');
+            Debug.Log(vm.GetCurrentTileX() + vm.GetCurrentTileY());
+            mm.StartBlinkingTile(vm.GetCurrentTileX(), vm.GetCurrentTileY(), vm.vehicleColor, 0.5f);
+            return;
+        }
+
+        // Check if the colliding object is on the "Player" layer
+        
+            MoveTargetObject();
+            mm.StopBlinkingTile(vm.GetCurrentTileX(), vm.GetCurrentTileY());
+            mm.SetTileColor(vm.GetCurrentTileX(), vm.GetCurrentTileY(), vm.vehicleColor);
+            vm.SetCurrentTile(gameObject.name[0] - '0', gameObject.name[1] - '0');
+            mm.StartBlinkingTile(vm.GetCurrentTileX(), vm.GetCurrentTileY(), vm.vehicleColor, 0.5f);
+        }
+    }
+
+    // Function to move the target GameObject
+    private void MoveTargetObject()
+    {
+        if (targetObject != null)
+        {
+            // Get the current position of the target object
+            Vector3 currentPosition = transform.position;
+            currentPosition.y = targetObject.transform.position.y;
+
+            // Update the x position by subtracting 13.62
+           // currentPosition.x -= OffsetX;
+            currentPosition.z -= OffsetZ;
+
+            // Apply the updated position back to the target object
+            targetObject.transform.position = currentPosition;
+        }
+        else
+        {
+            Debug.LogWarning("Target object is not assigned.");
+        }
+    }
+}

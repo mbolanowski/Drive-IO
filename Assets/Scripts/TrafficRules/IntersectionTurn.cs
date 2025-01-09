@@ -7,6 +7,7 @@ public class IntersectionTurn : MonoBehaviour
 {
     public VechicleManager vm;
     public PlayerManager pm;
+    public WarningSystemController wsc;
 
     public bool leftTurnAllowed = true;
     public bool rightTurnAllowed = true;
@@ -22,6 +23,10 @@ public class IntersectionTurn : MonoBehaviour
         if (vm == null)
         {
             vm = GameObject.Find("VechicleManager").GetComponent<VechicleManager>();
+        }
+        if (wsc == null)
+        {
+            wsc = GameObject.Find("Warning System").GetComponent<WarningSystemController>();
         }
     }
 
@@ -71,6 +76,7 @@ public class IntersectionTurn : MonoBehaviour
                     if (vm._declaredDirection != "right")
                     {
                         Debug.Log("You turned right without using the correct blinker!");
+                        wsc.SetInfoText("Turned Right Without Blinker");
                         pm.AddIncident();
                     }
                     else if (vm._declaredDirection == "right" && !vm.rightAllowed)
