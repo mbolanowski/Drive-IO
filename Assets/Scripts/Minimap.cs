@@ -14,6 +14,8 @@ public class Minimap : MonoBehaviour
 
     private Dictionary<(int, int), Coroutine> blinkingTiles = new Dictionary<(int, int), Coroutine>();
 
+    public PlayerManager pm;
+
     private void Start()
     {
         InitializeMinimap();
@@ -51,7 +53,10 @@ public class Minimap : MonoBehaviour
             Renderer tileRenderer = tiles[x, y].GetComponent<Renderer>();
             if (tileRenderer != null)
             {
-                tileRenderer.material.color = color;
+                Color currentColor = tileRenderer.material.color;
+                currentColor = color;
+                //currentColor.a = 1.0f;
+                tileRenderer.material.color = currentColor;
             }
             else
             {
@@ -65,6 +70,18 @@ public class Minimap : MonoBehaviour
         {
             Debug.LogWarning($"Tile coordinates ({x}, {y}) are out of bounds.");
         }
+    }
+
+    public Color GetTileColor(int x, int y)
+    {
+        Renderer tileRenderer = tiles[x, y].GetComponent<Renderer>();
+        if (tileRenderer != null) 
+        {
+            Color color = tileRenderer.material.color;
+            color.a = 0.0f;
+            return color;
+        }
+        return Color.white;
     }
 
     private IEnumerator AnimateTileSize(int x, int y)
@@ -105,9 +122,22 @@ public class Minimap : MonoBehaviour
             // Stop blinking if already blinking
             StopBlinkingTile(x, y);
 
-            // Start the blinking coroutine
-            Coroutine blinkCoroutine = StartCoroutine(BlinkTile(x, y, blinkColor, blinkInterval));
-            blinkingTiles[(x, y)] = blinkCoroutine;
+            if (pm.GetTileOwner(x, y))
+            {
+                    Color color = new Color(
+                    Mathf.Clamp01(blinkColor.r - 0.2f), // Adjust the red component and clamp it between 0 and 1
+                    blinkColor.g - 0.2f, // Keep the green component unchanged
+                    blinkColor.b - 0.2f, // Keep the blue component unchanged
+                    blinkColor.a  // Keep the alpha component unchanged
+                    );
+                SetTileColor( x, y, color );
+            }
+            else
+            {
+                // Start the blinking coroutine
+                Coroutine blinkCoroutine = StartCoroutine(BlinkTile(x, y, blinkColor, blinkInterval));
+                blinkingTiles[(x, y)] = blinkCoroutine;
+            }
         }
         else
         {
@@ -122,9 +152,9 @@ public class Minimap : MonoBehaviour
         {
             StopCoroutine(blinkCoroutine);
             blinkingTiles.Remove((x, y));
-
+            Color color = new Vector4(1.0f,1.0f, 1.0f, 0.2745f);
             // Reset the tile's color to its default (assuming white)
-            SetTileColor(x, y, Color.white);
+            SetTileColor(x, y, color);
         }
     }
 
@@ -137,7 +167,7 @@ public class Minimap : MonoBehaviour
             Debug.LogWarning($"Tile at ({x}, {y}) does not have a Renderer component.");
             yield break;
         }
-
+        blinkColor.a = 1.0f;
         Color originalColor = tileRenderer.material.color;
         bool isBlinking = true;
 

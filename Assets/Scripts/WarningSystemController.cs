@@ -29,6 +29,13 @@ public class WarningSystemController : MonoBehaviour
 
             // Animate the text (scale up, scale down, shake, and restore rotation)
             AnimateText(infoText);
+
+            // Activate the text and reset vanish timer
+            infoText.gameObject.SetActive(true);
+
+            // Cancel any previous vanish timer and start a new one
+            CancelInvoke("FadeOutText");
+            Invoke("FadeOutText", 3f); // Fade out after 3 seconds
         }
         else
         {
@@ -44,8 +51,15 @@ public class WarningSystemController : MonoBehaviour
             // Set the new text
             penaltyText.text = newText;
 
-            // Animate the text (scale up, scale down, shake, and restore rotation)
-            AnimateText(penaltyText);
+            // Animate the text (slide in from the left)
+            SlideInText(penaltyText);
+
+            // Activate the text and reset vanish timer
+            penaltyText.gameObject.SetActive(true);
+
+            // Cancel any previous vanish timer and start a new one
+            CancelInvoke("FadeOutPenaltyText");
+            Invoke("FadeOutPenaltyText", 3f); // Fade out after 3 seconds
         }
         else
         {
@@ -61,17 +75,85 @@ public class WarningSystemController : MonoBehaviour
         Quaternion originalRotation = textMeshPro.transform.rotation;
 
         // Scale up and down
-        LeanTween.scale(textMeshPro.gameObject, originalScale * 1.2f, 0.1f).setEase(LeanTweenType.easeInOutQuad)
+        LeanTween.scale(textMeshPro.gameObject, originalScale * 1.1f, 0.15f).setEase(LeanTweenType.easeInOutQuad)
             .setOnComplete(() =>
             {
                 LeanTween.scale(textMeshPro.gameObject, originalScale, 0.1f).setEase(LeanTweenType.easeInOutQuad);
             });
+    }
 
-        // Shake along the Y-axis
-        LeanTween.moveLocalY(textMeshPro.gameObject, textMeshPro.transform.localPosition.y + 10f, 0.1f).setEase(LeanTweenType.easeInOutQuad)
-            .setLoopPingPong(1); // Ping-pong effect (move back and forth)
+    // Function to animate the "Penalty" TextMeshPro by sliding in from the left
+    private void SlideInText(TextMeshPro textMeshPro)
+    {
+        // Get the RectTransform component
+        RectTransform rectTransform = textMeshPro.GetComponent<RectTransform>();
 
-        // Return the rotation to its starting point
-        LeanTween.rotate(textMeshPro.gameObject, originalRotation.eulerAngles, 0.2f).setEase(LeanTweenType.easeInOutQuad);
+        // Start position is off-screen to the left (you can adjust this value based on your screen width)
+        Vector3 offScreenPosition = new Vector3(rectTransform.position.x - 10f, rectTransform.localPosition.y, rectTransform.localPosition.z);
+
+        // Set the text to start off-screen to the left and animate it to its original position
+        rectTransform.localPosition = offScreenPosition;
+
+        // Animate the text to slide in from the left to its original position
+        LeanTween.moveLocalX(rectTransform.gameObject, 0f, 0.9f).setEase(LeanTweenType.easeOutQuad);
+    }
+
+    // Function to fade out the "Info" TextMeshPro after 3 seconds by changing vertex color
+    private void FadeOutText()
+    {
+        // Get the mesh of the text
+        Mesh mesh = infoText.mesh;
+
+        // Get the current vertex colors
+        Color[] colors = mesh.colors;
+
+        // Animate the alpha value of the vertex colors to 0 (fade out)
+        LeanTween.value(infoText.gameObject, 1f, 0f, 1f)
+            .setOnUpdate((float val) =>
+            {
+                // Fade out the vertex color by adjusting alpha
+                for (int i = 0; i < colors.Length; i++)
+                {
+                    colors[i].a = val; // Modify the alpha value of each vertex color
+                }
+
+                // Apply the modified colors back to the mesh
+                mesh.colors = colors;
+            })
+            .setOnComplete(() =>
+            {
+                infoText.gameObject.SetActive(false); // Deactivate after fade-out
+            });
+    }
+
+    // Function to fade out the "Penalty" TextMeshPro after 3 seconds by changing vertex color
+    private void FadeOutPenaltyText()
+    {
+        // Get the mesh of the text
+        Mesh mesh = penaltyText.mesh;
+
+        // Get the current vertex colors
+        Color[] colors = mesh.colors;
+
+        // Start fading out (move off-screen and fade out simultaneously)
+        LeanTween.moveLocalX(penaltyText.gameObject, penaltyText.transform.localPosition.x - 10f, 0.5f).setEase(LeanTweenType.easeInOutQuad);
+
+        // Animate the alpha value of the vertex colors to 0 (fade out)
+        LeanTween.value(penaltyText.gameObject, 1f, 0f, 1f)
+            .setOnUpdate((float val) =>
+            {
+                // Fade out the vertex color by adjusting alpha
+                for (int i = 0; i < colors.Length; i++)
+                {
+                    colors[i].a = val; // Modify the alpha value of each vertex color
+                }
+
+                // Apply the modified colors back to the mesh
+                mesh.colors = colors;
+            })
+            .setOnComplete(() =>
+            {
+                penaltyText.gameObject.SetActive(false); // Deactivate after fade-out
+            });
     }
 }

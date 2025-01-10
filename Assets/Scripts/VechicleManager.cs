@@ -22,11 +22,18 @@ public class VechicleManager : MonoBehaviour
     public int currentTileY = 0;
 
     public Color vehicleColor;
+    public GameObject vehicleObject;
+
+    private void Start()
+    {
+        
+    }
 
     private void Update()
     {
         gearText.text = "Bieg: " + (vc.GetCurrentGear() + 1).ToString();
         speedtext.text = "Prêdkoœæ: " + (vc.GetCurrentSpeed() * pm._speedMultiplier).ToString("F1");
+        ApplyVehicleColor();
     }
 
     public bool GetIsLeftBlinkerOn()
@@ -69,5 +76,29 @@ public class VechicleManager : MonoBehaviour
     public int GetCurrentTileY()
     {
         return currentTileY;
+    }
+
+    void ApplyVehicleColor()
+    {
+        if (vehicleObject != null)
+        {
+            Renderer vehicleRenderer = vehicleObject.GetComponent<Renderer>(); // Get the Renderer of the object
+            if (vehicleRenderer != null)
+            {
+                Material[] materials = vehicleRenderer.materials; // Get all materials applied to the object
+
+                materials[0].color = vehicleColor;
+                materials[2].color = vehicleColor;
+                materials[4].color = vehicleColor;
+            }
+            else
+            {
+                Debug.LogWarning("Renderer component not found on the vehicle object.");
+            }
+        }
+        else
+        {
+            Debug.LogWarning("Vehicle object not assigned.");
+        }
     }
 }

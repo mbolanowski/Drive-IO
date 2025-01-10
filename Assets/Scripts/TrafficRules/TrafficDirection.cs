@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static UnityEditor.PlayerSettings;
 
 public class TriggerDirectionCheck : MonoBehaviour
 {
@@ -9,6 +10,7 @@ public class TriggerDirectionCheck : MonoBehaviour
     public float checkTime;
 
     public PlayerManager playerManager;
+    public WarningSystemController wsc;
 
     public bool rightOfWay = false;
 
@@ -17,6 +19,10 @@ public class TriggerDirectionCheck : MonoBehaviour
         if (playerManager == null)
         {
             playerManager = GameObject.Find("PlayerManager").GetComponent<PlayerManager>();
+        }
+        if (wsc == null)
+        {
+            wsc = GameObject.Find("Warning System").GetComponent<WarningSystemController>();
         }
     }
     private void OnTriggerStay(Collider other)
@@ -50,6 +56,8 @@ public class TriggerDirectionCheck : MonoBehaviour
                     else if (dotProduct < -0.7f)  // Opposite direction
                     {
                         Debug.Log("You're going the wrong way!");
+                        wsc.SetInfoText("You're Going The Wrong Way");
+                        wsc.SetPenaltyText("-1 Life");
                         playerManager.AddIncident();
                     }
                     else

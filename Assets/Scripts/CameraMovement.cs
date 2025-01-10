@@ -8,6 +8,7 @@ public class MoveGameObject : MonoBehaviour
     public GameObject targetObject;
     public VechicleManager vm;
     public Minimap mm;
+    public PlayerManager pm;
 
     // The amount to subtract from the x position
     private const float OffsetX = 13.62f;
@@ -18,6 +19,11 @@ public class MoveGameObject : MonoBehaviour
 
     private void Start()
     {
+
+        if (pm == null)
+        {
+            pm = GameObject.Find("PlayerManager").GetComponent<PlayerManager>();
+        }
         // Mark as initialized after the first frame
         StartCoroutine(InitializeAfterFrame());
     }
@@ -36,6 +42,7 @@ public class MoveGameObject : MonoBehaviour
             // Skip the first call if the object is not initialized
             if (!isInitialized)
         {
+            MoveTargetObject();
             vm.SetCurrentTile(gameObject.name[0] - '0', gameObject.name[1] - '0');
             Debug.Log(vm.GetCurrentTileX() + vm.GetCurrentTileY());
             mm.StartBlinkingTile(vm.GetCurrentTileX(), vm.GetCurrentTileY(), vm.vehicleColor, 0.5f);
@@ -46,9 +53,14 @@ public class MoveGameObject : MonoBehaviour
         
             MoveTargetObject();
             mm.StopBlinkingTile(vm.GetCurrentTileX(), vm.GetCurrentTileY());
-            mm.SetTileColor(vm.GetCurrentTileX(), vm.GetCurrentTileY(), vm.vehicleColor);
+            if (!pm._dead)
+            {
+                mm.SetTileColor(vm.GetCurrentTileX(), vm.GetCurrentTileY(), vm.vehicleColor);
+                pm.AssignTile(vm.GetCurrentTileX(), vm.GetCurrentTileY());
+            }
             vm.SetCurrentTile(gameObject.name[0] - '0', gameObject.name[1] - '0');
             mm.StartBlinkingTile(vm.GetCurrentTileX(), vm.GetCurrentTileY(), vm.vehicleColor, 0.5f);
+            pm._dead = false;
         }
     }
 

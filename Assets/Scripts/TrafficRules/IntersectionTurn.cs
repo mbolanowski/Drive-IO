@@ -62,11 +62,15 @@ public class IntersectionTurn : MonoBehaviour
                     if (vm._declaredDirection != "straight")
                     {
                         Debug.Log("You went straight despite using a blinker!");
+                        wsc.SetInfoText("Didn't Turn Despite Blinker");
+                        wsc.SetPenaltyText("-1 Life");
                         pm.AddIncident();
                     }
                     else if (vm._declaredDirection == "straight" && !vm.straightAllowed)
                     {
                         Debug.Log("Going straight is not allowed here!");
+                        wsc.SetInfoText("Going Straight Isn't Allowed Here");
+                        wsc.SetPenaltyText("-1 Life");
                         pm.AddIncident();
                     }
                 }
@@ -77,11 +81,14 @@ public class IntersectionTurn : MonoBehaviour
                     {
                         Debug.Log("You turned right without using the correct blinker!");
                         wsc.SetInfoText("Turned Right Without Blinker");
+                        wsc.SetPenaltyText("-1 Life");
                         pm.AddIncident();
                     }
                     else if (vm._declaredDirection == "right" && !vm.rightAllowed)
                     {
                         Debug.Log("Going right is not allowed here!");
+                        wsc.SetInfoText("Turning Right Isn't Allowed Here");
+                        wsc.SetPenaltyText("-1 Life");
                         pm.AddIncident();
                     }
                 }
@@ -91,11 +98,15 @@ public class IntersectionTurn : MonoBehaviour
                     if (vm._declaredDirection != "left")
                     {
                         Debug.Log("You turned left without using the correct blinker!");
+                        wsc.SetInfoText("Turned Left Without Blinker");
+                        wsc.SetPenaltyText("-1 Life");
                         pm.AddIncident();
                     }
                     else if (vm._declaredDirection == "left" && !vm.leftAllowed)
                     {
                         Debug.Log("Going left is not allowed here!");
+                        wsc.SetInfoText("Turning Left Isn't Allowed Here");
+                        wsc.SetPenaltyText("-1 Life");
                         pm.AddIncident();
                     }
                 }

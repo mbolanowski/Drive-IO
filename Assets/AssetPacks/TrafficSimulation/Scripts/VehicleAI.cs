@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
+using static UnityEditor.PlayerSettings;
 
 namespace TrafficSimulation {
 
@@ -73,6 +74,7 @@ namespace TrafficSimulation {
         private CarsManager cm;
         private VechicleManager vm;
         private PlayerManager pm;
+        private WarningSystemController wsc;
         private float initMaxSpeed = 0;
         private int pastTargetSegment = -1;
         private Target currentTarget;
@@ -97,6 +99,11 @@ namespace TrafficSimulation {
             if (trafficSystem == null)
             {
                 trafficSystem = GameObject.Find("Traffic System").GetComponent<TrafficSystem>();
+            }
+
+            if (wsc == null)
+            {
+                wsc = GameObject.Find("Warning System").GetComponent<WarningSystemController>();
             }
 
             initMaxSpeed = wheelDrive.maxSpeed;
@@ -369,6 +376,9 @@ namespace TrafficSimulation {
                                 if (timeSinceLastCheck >= 5f)
                                 {
                                     pm.AddIncident();
+                                    pm.AddIncident();
+                                    wsc.SetInfoText("Wymusiles pierwszenstwo");
+                                    wsc.SetPenaltyText("-2 Life");
                                     Debug.Log("Wymuszenie pierwszeñstwa.");
                                     timeSinceLastCheck = 0f;
                                 }
@@ -388,6 +398,9 @@ namespace TrafficSimulation {
                                 if (timeSinceLastCheck >= 5f)
                                 {
                                     pm.AddIncident();
+                                    pm.AddIncident();
+                                    wsc.SetInfoText("Wymusiles pierwszenstwo");
+                                    wsc.SetPenaltyText("-2 Life");
                                     Debug.Log("Wymuszenie pierwszeñstwa.");
                                     timeSinceLastCheck = 0f;
                                 }

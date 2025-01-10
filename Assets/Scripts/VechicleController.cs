@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using static UnityEditor.PlayerSettings;
 
 public class VehicleControllerWithGears : MonoBehaviour
 {
@@ -43,12 +44,26 @@ public class VehicleControllerWithGears : MonoBehaviour
     private bool isLeftBlinkerOn = false;
     private bool isRightBlinkerOn = false;
 
+    public Transform frontLeftWheel; // Front left wheel model
+    public Transform frontRightWheel; // Front right wheel model
+
+    public PlayerManager pm;
+    public WarningSystemController wsc;
     void Start()
     {
         rb = GetComponent<Rigidbody>();
         // Turn off blinkers initially
         SetBlinker(leftBlinker, false);
         SetBlinker(rightBlinker, false);
+
+        if (pm == null)
+        {
+            pm = GameObject.Find("PlayerManager").GetComponent<PlayerManager>();
+        }
+        if (wsc == null)
+        {
+            wsc = GameObject.Find("Warning System").GetComponent<WarningSystemController>();
+        }
     }
 
     void Update()
@@ -214,6 +229,8 @@ public class VehicleControllerWithGears : MonoBehaviour
 
             float turn = turnInput * gearSteering[currentGear] * rb.velocity.magnitude * Time.fixedDeltaTime;
             rb.MoveRotation(rb.rotation * Quaternion.Euler(0f, turn, 0f));
+
+            RotateWheels(turnInput);
         }
     }
 
@@ -338,6 +355,28 @@ public class VehicleControllerWithGears : MonoBehaviour
 
         // Optional: Log or visualize the impact
         Debug.Log($"Collision detected with {collision.gameObject.name}. Impact: {collisionImpact}, Speed reduced by: {reductionFactor * 100}%.");
+        wsc.SetInfoText("You Crashed");
+        wsc.SetPenaltyText("-3 Life");
+        pm.Die();
+    }
+
+    void RotateWheels(float steeringInput)
+    {
+        // Rotate the front wheels around their local axis
+        if (frontLeftWheel != null && frontRightWheel != null)
+        {
+            float rotationAngle = steeringInput * 35f; // Example: 45 degrees for full steering input
+            if (Vector3.Dot(rb.velocity, transform.forward) < 0)
+            {
+                frontLeftWheel.localRotation = Quaternion.Euler(0f, -rotationAngle, 0f);
+                frontRightWheel.localRotation = Quaternion.Euler(180f, -rotationAngle, 180f);
+            }
+            else
+            {
+                frontLeftWheel.localRotation = Quaternion.Euler(0f, rotationAngle, 0f);
+                frontRightWheel.localRotation = Quaternion.Euler(180f, rotationAngle, 180f);
+            }
+        }
     }
 
 

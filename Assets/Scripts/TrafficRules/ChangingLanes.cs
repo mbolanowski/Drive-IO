@@ -9,7 +9,15 @@ public class ChangingLanes : MonoBehaviour
     public LanePosition lanePosition; // Determine the lane position
     public VehicleControllerWithGears vc; // Reference to the vehicle controller
     public PlayerManager playerManager;     // Reference to the player manager
+    public WarningSystemController wsc;
 
+    private void Start()
+    {
+        if (wsc == null)
+        {
+            wsc = GameObject.Find("Warning System").GetComponent<WarningSystemController>();
+        }
+    }
     private void OnTriggerEnter(Collider other)
     {
         int layer = other.gameObject.layer;
@@ -35,6 +43,8 @@ public class ChangingLanes : MonoBehaviour
         if (!vc.GetIsLeftBlinkerOn() && playerManager.lanePosition != "Left")
         {
             playerManager.AddIncident();
+            wsc.SetInfoText("Changed Lane Without Blinker");
+            wsc.SetPenaltyText("-1 Life");
             Debug.Log("Left Blinker isn't on!");
         }
         playerManager.SetCurrentLane("Left");
@@ -47,6 +57,8 @@ public class ChangingLanes : MonoBehaviour
             if (!vc.GetIsRightBlinkerOn())
             {
                 playerManager.AddIncident();
+                wsc.SetInfoText("Changed Lane Without Blinker");
+                wsc.SetPenaltyText("-1 Life");
                 Debug.Log("Right Blinker isn't on!");
             }
         }
@@ -55,6 +67,8 @@ public class ChangingLanes : MonoBehaviour
             if (!vc.GetIsLeftBlinkerOn())
             {
                 playerManager.AddIncident();
+                wsc.SetInfoText("Changed Lane Without Blinker");
+                wsc.SetPenaltyText("-1 Life");
                 Debug.Log("Left Blinker isn't on!");
             }
         }
@@ -66,6 +80,8 @@ public class ChangingLanes : MonoBehaviour
         if (!vc.GetIsRightBlinkerOn() && playerManager.lanePosition != "Right")
         {
             playerManager.AddIncident();
+            wsc.SetInfoText("Changed Lane Without Blinker");
+            wsc.SetPenaltyText("-1 Life");
             Debug.Log("Right Blinker isn't on!");
         }
         playerManager.SetCurrentLane("Right");

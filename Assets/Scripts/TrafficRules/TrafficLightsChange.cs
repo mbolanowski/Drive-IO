@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static UnityEditor.PlayerSettings;
 
 public class TrafficLightsChange : MonoBehaviour
 {
@@ -8,11 +9,16 @@ public class TrafficLightsChange : MonoBehaviour
     public float angleTolerance = 15f; // in degrees
 
     public PlayerManager pm;
+    public WarningSystemController wsc;
     private void Start()
     {
         if (pm == null)
         {
             pm = GameObject.Find("PlayerManager").GetComponent<PlayerManager>();
+        }
+        if (wsc == null)
+        {
+            wsc = GameObject.Find("Warning System").GetComponent<WarningSystemController>();
         }
     }
     private void OnTriggerEnter(Collider other)
@@ -38,6 +44,8 @@ public class TrafficLightsChange : MonoBehaviour
                     if (lightColor == LightColor.Red)
                     {
                         Debug.Log("You crossed during a red light!");
+                        wsc.SetInfoText("Crossed During Red Light");
+                        wsc.SetPenaltyText("-1 Life");
                         pm.AddIncident();
                     }
                 }
