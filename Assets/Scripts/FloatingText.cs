@@ -5,6 +5,7 @@ using UnityEngine;
 
 public class FloatingText : MonoBehaviour
 {
+    public TextMeshPro name;
     public string displayText = "Hello, World!"; // Text to display
     public Vector3 offset = new Vector3(0, 2, 0); // Offset from the GameObject
     public float textSize = 1.0f; // Size of the text
@@ -29,7 +30,8 @@ public class FloatingText : MonoBehaviour
     {
 
         // Set the text properties
-        textMeshPro.text = displayText;
+        textMeshPro.text = name.text;
+        if (name.text == "input nickname here...") textMeshPro.text = "default";
         textMeshPro.fontSize = textSize;
         textMeshPro.color = textColor;
 

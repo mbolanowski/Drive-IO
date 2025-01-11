@@ -28,6 +28,8 @@ public class PlayerManager : MonoBehaviour
 
     public bool _dead = false;
 
+    public bool _justSpawned = true;
+
     // Store held tiles as a set of (x, y) coordinates
     private HashSet<(int, int)> heldTiles = new HashSet<(int, int)>();
 

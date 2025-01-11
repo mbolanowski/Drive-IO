@@ -8,6 +8,7 @@ public class IntersectionTurn : MonoBehaviour
     public VechicleManager vm;
     public PlayerManager pm;
     public WarningSystemController wsc;
+    public VehicleControllerWithGears vc;
 
     public bool leftTurnAllowed = true;
     public bool rightTurnAllowed = true;
@@ -28,7 +29,12 @@ public class IntersectionTurn : MonoBehaviour
         {
             wsc = GameObject.Find("Warning System").GetComponent<WarningSystemController>();
         }
+        if (vc == null)
+        {
+            vc = GameObject.Find("Car").GetComponent<VehicleControllerWithGears>();
+        }
     }
+
 
     private void OnTriggerEnter(Collider other)
     {
@@ -79,8 +85,15 @@ public class IntersectionTurn : MonoBehaviour
                 {
                     if (vm._declaredDirection != "right")
                     {
-                        Debug.Log("You turned right without using the correct blinker!");
-                        wsc.SetInfoText("Turned Right Without Blinker");
+                        if (!vc.GetIsRightBlinkerOn())
+                        {
+                            Debug.Log("You turned right without using the correct blinker!");
+                            wsc.SetInfoText("Turned Right Without Blinker");
+                        }
+                        else
+                        {
+                            wsc.SetInfoText("You Used Your Blinker Too Late");
+                        }
                         wsc.SetPenaltyText("-1 Life");
                         pm.AddIncident();
                     }
@@ -97,8 +110,15 @@ public class IntersectionTurn : MonoBehaviour
                 {
                     if (vm._declaredDirection != "left")
                     {
-                        Debug.Log("You turned left without using the correct blinker!");
-                        wsc.SetInfoText("Turned Left Without Blinker");
+                        if (!vc.GetIsLeftBlinkerOn())
+                        {
+                            Debug.Log("You turned left without using the correct blinker!");
+                            wsc.SetInfoText("Turned Left Without Blinker");
+                        }
+                        else
+                        {
+                            wsc.SetInfoText("You Used Your Blinker Too Late");
+                        }
                         wsc.SetPenaltyText("-1 Life");
                         pm.AddIncident();
                     }
@@ -112,6 +132,7 @@ public class IntersectionTurn : MonoBehaviour
                 }
                 vm._lastForewardVector = Vector3.zero;
                 vm._declaredDirection = "empty";
+                vm.TurnOffBlinkers();
 
                 vm.leftAllowed = false;
                 vm.rightAllowed = false;

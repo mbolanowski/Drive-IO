@@ -13,7 +13,7 @@ public class SpawnManager : MonoBehaviour
     private void Start()
     {
         ChooseInitialSpawnPoint();
-        RespawnPlayer(); // Call RespawnPlayer at the start
+        //RespawnPlayer(); // Call RespawnPlayer at the start
     }
 
     // Choose a random spawn point once at the start

@@ -25,7 +25,7 @@ public class MoveGameObject : MonoBehaviour
             pm = GameObject.Find("PlayerManager").GetComponent<PlayerManager>();
         }
         // Mark as initialized after the first frame
-        StartCoroutine(InitializeAfterFrame());
+        //StartCoroutine(InitializeAfterFrame());
     }
 
     private IEnumerator InitializeAfterFrame()
@@ -35,32 +35,42 @@ public class MoveGameObject : MonoBehaviour
         isInitialized = true;
     }
 
+    private void OnTriggerStay(Collider other)
+    {
+        if (pm._justSpawned)    
+        {
+            if (mm.gameObject.active)
+            {
+                Debug.Log("What");
+                mm.StartBlinkingTile(vm.GetCurrentTileX(), vm.GetCurrentTileY(), vm.vehicleColor, 0.5f);
+                pm._justSpawned = false;
+            }
+        }
+    }
+
     private void OnTriggerEnter(Collider other)
     {
         if (other.gameObject.layer == LayerMask.NameToLayer("Player"))
         {
-            // Skip the first call if the object is not initialized
-            if (!isInitialized)
-        {
-            MoveTargetObject();
-            vm.SetCurrentTile(gameObject.name[0] - '0', gameObject.name[1] - '0');
-            Debug.Log(vm.GetCurrentTileX() + vm.GetCurrentTileY());
-            mm.StartBlinkingTile(vm.GetCurrentTileX(), vm.GetCurrentTileY(), vm.vehicleColor, 0.5f);
-            return;
-        }
-
-        // Check if the colliding object is on the "Player" layer
-        
-            MoveTargetObject();
-            mm.StopBlinkingTile(vm.GetCurrentTileX(), vm.GetCurrentTileY());
-            if (!pm._dead)
+            if (pm._justSpawned)
             {
-                mm.SetTileColor(vm.GetCurrentTileX(), vm.GetCurrentTileY(), vm.vehicleColor);
-                pm.AssignTile(vm.GetCurrentTileX(), vm.GetCurrentTileY());
+                MoveTargetObject();
+                vm.SetCurrentTile(gameObject.name[0] - '0', gameObject.name[1] - '0');
             }
-            vm.SetCurrentTile(gameObject.name[0] - '0', gameObject.name[1] - '0');
-            mm.StartBlinkingTile(vm.GetCurrentTileX(), vm.GetCurrentTileY(), vm.vehicleColor, 0.5f);
-            pm._dead = false;
+            else
+            {
+                MoveTargetObject();
+                mm.StopBlinkingTile(vm.GetCurrentTileX(), vm.GetCurrentTileY());
+
+                if (!pm._dead)
+                {
+                    mm.SetTileColor(vm.GetCurrentTileX(), vm.GetCurrentTileY(), vm.vehicleColor);
+                    pm.AssignTile(vm.GetCurrentTileX(), vm.GetCurrentTileY());
+                }
+                vm.SetCurrentTile(gameObject.name[0] - '0', gameObject.name[1] - '0');
+                mm.StartBlinkingTile(vm.GetCurrentTileX(), vm.GetCurrentTileY(), vm.vehicleColor, 0.5f);
+                pm._dead = false;
+            }
         }
     }
 

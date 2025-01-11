@@ -52,6 +52,11 @@ public class VechicleManager : MonoBehaviour
         else return false;
     }
 
+    public void TurnOffBlinkers()
+    {
+        vc.TurnOffBlinker();
+    }
+
     public float GetAcceleration()
     {
         return vc.GetAcceleration();

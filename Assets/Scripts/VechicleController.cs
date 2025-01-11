@@ -42,7 +42,7 @@ public class VehicleControllerWithGears : MonoBehaviour
     private Coroutine leftBlinkerCoroutine;
     private Coroutine rightBlinkerCoroutine;
     private bool isLeftBlinkerOn = false;
-    private bool isRightBlinkerOn = false;
+    public bool isRightBlinkerOn = false;
 
     public Transform frontLeftWheel; // Front left wheel model
     public Transform frontRightWheel; // Front right wheel model
@@ -278,6 +278,16 @@ public class VehicleControllerWithGears : MonoBehaviour
                 SetBlinker(leftBlinker, false);
             }
         }
+    }
+
+    public void TurnOffBlinker()
+    {
+            if (leftBlinkerCoroutine != null) StopCoroutine(leftBlinkerCoroutine); // Stop previous coroutine if running
+            if (rightBlinkerCoroutine != null) StopCoroutine(rightBlinkerCoroutine);
+            isLeftBlinkerOn = false;
+            isRightBlinkerOn = false;
+            SetBlinker(leftBlinker, false);
+            SetBlinker(rightBlinker, false);
     }
 
     void CheckForObstaclesAlongCurve()
