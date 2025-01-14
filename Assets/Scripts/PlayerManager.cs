@@ -19,6 +19,7 @@ public class PlayerManager : MonoBehaviour
 
     public VechicleManager vm;
     public SpawnManager sm;
+    public VehicleControllerWithGears vc;
 
     public float _speedMultiplier = 12f;
 
@@ -74,6 +75,8 @@ public class PlayerManager : MonoBehaviour
         Life3.SetActive(true);
         Life2.SetActive(true);
         Life1.SetActive(true);
+
+        vc.TurnOffBlinker();
     }
 
     public int GetIncidents()

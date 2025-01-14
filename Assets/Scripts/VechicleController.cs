@@ -116,7 +116,7 @@ public class VehicleControllerWithGears : MonoBehaviour
             else
             {
                 // Apply braking to decelerate to stop
-                currentAcceleration = Mathf.MoveTowards(currentAcceleration, 0f, baseDecelerationRate * 2.0f * Time.fixedDeltaTime);
+                currentAcceleration = Mathf.MoveTowards(currentAcceleration, 0f, baseDecelerationRate * 4.0f * Time.fixedDeltaTime);
                 isDecelerating = true;
             }
         }

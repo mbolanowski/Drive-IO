@@ -19,11 +19,6 @@ namespace TrafficSimulation {
 
             EditorGUI.BeginDisabledGroup(intersection.intersectionType != IntersectionType.STOP);
 
-            EditorGUILayout.LabelField("Stop", EditorStyles.boldLabel);
-            SerializedProperty sPrioritySegments = serializedObject.FindProperty("prioritySegments");
-            EditorGUILayout.PropertyField(sPrioritySegments, new GUIContent("Priority Segments"), true);
-            serializedObject.ApplyModifiedProperties();
-
             EditorGUI.EndDisabledGroup();
 
             EditorGUI.BeginDisabledGroup(intersection.intersectionType != IntersectionType.TRAFFIC_LIGHT);

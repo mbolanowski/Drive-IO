@@ -7,7 +7,13 @@ using UnityEngine;
 namespace TrafficSimulation {
     public class Segment : MonoBehaviour {
         public List<Segment> nextSegments;
-        
+
+        public bool _trueIfHorizontal = false;
+
+        public bool _hasPriority = false;
+
+        public int intersectionEntranceDirection = 4; //0=UP, 1=RIGHT, 2=DOWN, 3=LEFT
+
         [HideInInspector] public int id;
         [HideInInspector] public List<Waypoint> waypoints;
 

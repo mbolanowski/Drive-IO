@@ -88,6 +88,18 @@ namespace TrafficSimulation {
         private bool isLeftBlinkerOn = false;
         private bool isRightBlinkerOn = false;
 
+        public int placeInQueue = 5;
+
+        public float brake = 0;
+
+        public float savedSteering = 0.0f;
+
+        public bool _isHorizontal;
+
+        public bool _TurningLeft = false;
+        public bool _TurningRight = false;
+        public bool _TurningStraight = false;
+
         void Start()
         {
             wheelDrive = this.GetComponent<WheelDrive>();
@@ -116,7 +128,7 @@ namespace TrafficSimulation {
             if (trafficSystem == null)
                 return;
 
-            WaypointChecker();
+                    WaypointChecker();
             HandleBlinkers();
             MoveVehicle();
         }
@@ -151,25 +163,35 @@ namespace TrafficSimulation {
 
             //Default, full acceleration, no break and no steering
             float acc = 1;
-            float brake = 0;
+            brake = 0;
             float steering = 0;
             wheelDrive.maxSpeed = initMaxSpeed;
 
             //Calculate if there is a planned turn
             Transform targetTransform = trafficSystem.segments[currentTarget.segment].waypoints[currentTarget.waypoint].transform;
             Transform futureTargetTransform = trafficSystem.segments[futureTarget.segment].waypoints[futureTarget.waypoint].transform;
+            //Debug.Log(trafficSystem.segments[futureTarget.segment].waypoints[futureTarget.waypoint].name);
 
             // Distance to the current waypoint
             float distanceToWaypoint = Vector3.Distance(this.transform.position, targetTransform.position);
 
-            if (distanceToWaypoint < distanceTresh * 2 || vehicleStatus == Status.SLOW_DOWN) 
+            if (distanceToWaypoint < distanceTresh * 10 || vehicleStatus == Status.SLOW_DOWN) 
             {
+                //Debug.Log("Distance: " + distanceToWaypoint + " to waypoint: " + targetTransform.gameObject.name);
                 Vector3 futureVel = futureTargetTransform.position - targetTransform.position;
                 futureSteering = Mathf.Clamp(this.transform.InverseTransformDirection(futureVel.normalized).x, -1, 1);
+
+                foreach (Segment segment in trafficSystem.segments)
+                {
+                    if (segment.IsOnSegment(this.transform.position))
+                    {
+                        _isHorizontal = segment._trueIfHorizontal;
+                    }
+                }
             }
             else
             {
-                futureSteering = 0.0f;
+                //futureSteering *= 0.1f;
             }
 
                 //Check if the car has to stop
@@ -186,9 +208,21 @@ namespace TrafficSimulation {
                     brake = 0f;
                 }
 
+                if (vehicleStatus == Status.GO)
+                {
+                    savedSteering = futureSteering;
+                }
+
                 //If planned to steer, decrease the speed
-                if(futureSteering > .3f || futureSteering < -.3f){
+                if((savedSteering < .3f && savedSteering > -.3f) && vehicleStatus == Status.SLOW_DOWN)
+                {
+                    wheelDrive.maxSpeed = initMaxSpeed;
+                    //Debug.Log(futureSteering);
+                }
+                else if(vehicleStatus == Status.SLOW_DOWN)
+                {
                     wheelDrive.maxSpeed = Mathf.Min(wheelDrive.maxSpeed, wheelDrive.steeringSpeedMax);
+                    //Debug.Log("SLOW DOWN DAMN " + wheelDrive.maxSpeed);
                 }
                 else
                 {
@@ -236,76 +270,107 @@ namespace TrafficSimulation {
                         }
                         
                         //If the two vehicles are too close, and facing the same direction, brake the ego vehicle
-                        if(hitDist < emergencyBrakeThresh && dotFront > .8f){
+                        if(hitDist < emergencyBrakeThresh && dotFront > .5f){
                             acc = 0;
                             brake = 1;
                             wheelDrive.maxSpeed = Mathf.Max(wheelDrive.maxSpeed / 2f, wheelDrive.minSpeed);
                         }
 
                         //If the two vehicles are too close, and not facing same direction, slight make the ego vehicle go backward
-                        else if(hitDist < emergencyBrakeThresh && dotFront <= .8f){
-                            acc = -.3f;
-                            brake = 0f;
-                            wheelDrive.maxSpeed = Mathf.Max(wheelDrive.maxSpeed / 2f, wheelDrive.minSpeed);
+                        else if(hitDist < (emergencyBrakeThresh + 0.4f) && dotFront <= .8f){
+                            //acc = 0;
+                            //brake = 1;
+                            //wheelDrive.maxSpeed = Mathf.Max(wheelDrive.maxSpeed / 2f, wheelDrive.minSpeed);
 
                             //Check if the vehicle we are close to is located on the right or left then apply according steering to try to make it move
-                            float dotRight = Vector3.Dot(this.transform.forward, otherVehicle.transform.right);
+                            //float dotRight = Vector3.Dot(this.transform.forward, otherVehicle.transform.right);
                             //Right
-                            if(dotRight > 0.1f) steering = .3f;
+                            //if(dotRight > 0.3f) steering = -.2f;
                             //Left
-                            else if(dotRight < -0.1f) steering = -.3f;
+                            //else if(dotRight < -0.3f) steering = .2f;
                             //Middle
-                            else steering = -.7f;
+                            //else steering = -.7f;
                         }
                         //If the two vehicles are getting close, slow down their speed
                         else if(hitDist < slowDownThresh){
                             acc = .5f;
                             brake = 0f;
-                            //wheelDrive.maxSpeed = Mathf.Max(wheelDrive.maxSpeed / 1.5f, wheelDrive.minSpeed);
+                            wheelDrive.maxSpeed = Mathf.Max(wheelDrive.maxSpeed / 1.5f, wheelDrive.minSpeed);
                         }
                         if (otherVehicleAI.vehicleStatus == Status.SLOW_DOWN && this.GetComponent<VehicleAI>().vehicleStatus == Status.SLOW_DOWN)
                         {
                             //Debug.Log("Other vehicle is turning: " + otherTurn + "And this is turning: " + thisTurn);
-                            // Check for priority based on turn direction
-                            if (otherTurn == 1 && thisTurn != 1)
-                            { // If the other vehicle is turning right, priority over any other turn
-                                if (hitDist < intersectionBrake)
+                            // Check for priority based on turn direction                                                           2 STRAIGHT, 0 RIGHT, 1 LEFT
+                            bool thisHorizontal = this.GetComponent<VehicleAI>()._isHorizontal;
+                            bool otherHorizontal = otherVehicleAI._isHorizontal;
+                            if (thisTurn == 1 && otherTurn == 0)
+                            {
+                                if ((thisHorizontal && otherHorizontal) || (!thisHorizontal && !otherHorizontal))
+                                {
+                                    acc = 0;
+                                    brake = 1;
+                                }
+                            }
+                            else if (thisTurn == 1 && otherTurn == 1)
+                            {
+                                if(placeInQueue > otherVehicleAI.placeInQueue && ((thisHorizontal && otherHorizontal)) || ((!thisHorizontal && !otherHorizontal)))
+                                {
+                                    acc = 0;
+                                    brake = 1;
+                                    float dotRight = Vector3.Dot(this.transform.forward, otherVehicle.transform.right);
+                                    //Right
+                                    if (dotRight > 0.3f) steering = .4f;
+                                    //Left
+                                    else if (dotRight < -0.3f) steering = -.4f;
+                                    //Middle
+                                    else steering = -.7f;
+                                }
+                                else
+                                {
+                                }
+                            }
+                            else if (thisTurn == 1 && otherTurn == 2)
+                            {
+                                acc = 0;
+                                brake = 1;
+                            }
+
+                            else if (thisTurn == 2 && otherTurn == 0)
+                            {
+                                if ((!(thisHorizontal && otherHorizontal)) || (!(thisHorizontal && !otherHorizontal)))
                                 {
                                     acc = 0;
                                     brake = 1;
                                 }
                                 else
                                 {
-                                    //wheelDrive.maxSpeed = otherVehicle.maxSpeed * 1.2f;
                                 }
                             }
-                            else if (otherTurn == 2 && thisTurn == 0)
-                            { // If the other vehicle is going straight and we are turning left
-                                if (hitDist < intersectionBrake)
+                            else if (thisTurn == 2 && otherTurn == 1)
+                            {
+                            }
+                            else if (thisTurn == 2 && otherTurn == 2)
+                            {
+                                if ((thisHorizontal && otherHorizontal) || (!thisHorizontal && !otherHorizontal))
+                                {
+                                }
+                                else
                                 {
                                     acc = 0;
                                     brake = 1;
                                 }
-                                else
-                                {
-                                    //wheelDrive.maxSpeed = otherVehicle.maxSpeed * 1.2f;
-                                }
                             }
-                            else if (otherTurn == 0 && thisTurn != 0)
-                            { // If the other vehicle is turning left, it never has priority
-                                if (hitDist < intersectionBrake)
-                                {
-                                    acc = 0;
-                                    brake = 1;
-                                }
-                                else
-                                {
-                                    //wheelDrive.maxSpeed = otherVehicle.maxSpeed * 1.5f;
-                                }
+
+                            else if (thisTurn == 0 && otherTurn == 0)
+                            {
                             }
-                            else if (otherTurn == 2 && thisTurn == 2)
-                            { // If both are going straight, no priority change
+                            else if (thisTurn == 0 && otherTurn == 1)
+                            {
                             }
+                            else if (thisTurn == 0 && otherTurn == 2)
+                            {
+                            }
+
                         }
                     }
                     else if (layer == LayerMask.NameToLayer("Player"))
@@ -452,7 +517,7 @@ namespace TrafficSimulation {
             float minDist = 1000f;
 
             float speedFactor = Mathf.Clamp01(wheelDrive.maxSpeed * 0.5f / initMaxSpeed);
-            raySpacing = Mathf.RoundToInt(Mathf.Lerp(2f, 8f, 1 - speedFactor));
+            //raySpacing = Mathf.RoundToInt(Mathf.Lerp(2f, 8f, 1 - speedFactor));
 
             float initRay = (raysNumber / 2f) * raySpacing;
             float hitDist =  -1f;
@@ -550,25 +615,49 @@ namespace TrafficSimulation {
             return vehicleSegment;
         }
 
+        public Segment GetSegmentObject()
+        {
+            int vehicleSegment = currentTarget.segment;
+            bool isOnSegment = trafficSystem.segments[vehicleSegment].IsOnSegment(this.transform.position);
+            if (!isOnSegment)
+            {
+                bool isOnPSegement = trafficSystem.segments[pastTargetSegment].IsOnSegment(this.transform.position);
+                if (isOnPSegement)
+                    vehicleSegment = pastTargetSegment;
+            }
+            return trafficSystem.segments[vehicleSegment];
+        }
+
         void HandleBlinkers()
         {
-            // Left Arrow blinker
-            if (futureSteering < -0.6f && !isLeftBlinkerOn)
-            {
-                if (leftBlinkerCoroutine != null) StopCoroutine(leftBlinkerCoroutine); // Stop previous coroutine if running
-                isLeftBlinkerOn = true;
-                leftBlinkerCoroutine = StartCoroutine(BlinkerCoroutine(leftBlinker));
-            }
 
-            else if (futureSteering > 0.6f && !isRightBlinkerOn)
-            {
-                if (rightBlinkerCoroutine != null) StopCoroutine(rightBlinkerCoroutine); // Stop previous coroutine if running
-                isRightBlinkerOn = true;
-                rightBlinkerCoroutine = StartCoroutine(BlinkerCoroutine(rightBlinker));
+            //Calculate if there is a planned turn
+            Transform targetTransform = trafficSystem.segments[currentTarget.segment].waypoints[currentTarget.waypoint].transform;
+            Transform futureTargetTransform = trafficSystem.segments[futureTarget.segment].waypoints[futureTarget.waypoint].transform;
+            //Debug.Log(trafficSystem.segments[futureTarget.segment].waypoints[futureTarget.waypoint].name);
 
+            // Distance to the current waypoint
+            float distanceToWaypoint = Vector3.Distance(this.transform.position, targetTransform.position);
+
+            if (distanceToWaypoint < distanceTresh * 5)
+            {
+                // Left Arrow blinker
+                if (futureSteering < -0.6f && !isLeftBlinkerOn)
+                {
+                    if (leftBlinkerCoroutine != null) StopCoroutine(leftBlinkerCoroutine); // Stop previous coroutine if running
+                    isLeftBlinkerOn = true;
+                    leftBlinkerCoroutine = StartCoroutine(BlinkerCoroutine(leftBlinker));
+                }
+
+                else if (futureSteering > 0.6f && !isRightBlinkerOn)
+                {
+                    if (rightBlinkerCoroutine != null) StopCoroutine(rightBlinkerCoroutine); // Stop previous coroutine if running
+                    isRightBlinkerOn = true;
+                    rightBlinkerCoroutine = StartCoroutine(BlinkerCoroutine(rightBlinker));
+
+                }
             }
-            
-            else if(futureSteering > -0.6f && futureSteering < 0.6f)
+            else
             {
                 isLeftBlinkerOn = false;
                 isRightBlinkerOn = false;
