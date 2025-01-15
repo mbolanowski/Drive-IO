@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace TrafficSimulation
@@ -27,6 +28,8 @@ namespace TrafficSimulation
 
         [HideInInspector] public int currentRedLightsGroup = 1;
 
+        int num = 0;
+
         void Start()
         {
             turningLeftQueue = new List<GameObject>();
@@ -37,17 +40,7 @@ namespace TrafficSimulation
             if (intersectionType == IntersectionType.TRAFFIC_LIGHT)
                 InvokeRepeating("SwitchLights", lightsDuration, lightsDuration);
         }
-
-        void SwitchLights()
-        {
-
-            if (currentRedLightsGroup == 1) currentRedLightsGroup = 2;
-            else if (currentRedLightsGroup == 2) currentRedLightsGroup = 1;
-
-            //Wait few seconds after light transition before making the other car move (= orange light)
-            Invoke("MoveVehiclesQueue", orangeLightDuration);
-        }
-
+        
         bool IsVehicleToTheRight(Transform straightVehicle, Transform rightTurningVehicle)
         {
             // Get positions relative to intersection center
@@ -103,6 +96,10 @@ namespace TrafficSimulation
 
             foreach (GameObject otherVehicle in vehiclesInIntersection)
             {
+                if(otherVehicle.GetComponent<VehicleAI>()._TurningLeft && vehicleAI._TurningLeft)
+                {
+                    return false;
+                }
                 if (WillPathsIntersect(vehicle, otherVehicle))
                 {
                     return true;
@@ -116,8 +113,8 @@ namespace TrafficSimulation
             VehicleAI ai1 = vehicle1.GetComponent<VehicleAI>();
             VehicleAI ai2 = vehicle2.GetComponent<VehicleAI>();
 
-            int entrance1 = ai1.GetSegmentObject().intersectionEntranceDirection;
-            int entrance2 = ai2.GetSegmentObject().intersectionEntranceDirection;
+            int entrance1 = ai1.intersectionEntranceDirection;
+            int entrance2 = ai2.intersectionEntranceDirection;
 
             return entrance1 == entrance2;
         }
@@ -125,7 +122,7 @@ namespace TrafficSimulation
         bool HasHigherPriorityVehicleInQueue(GameObject vehicle)
         {
             VehicleAI vehicleAI = vehicle.GetComponent<VehicleAI>();
-            int vehicleEntrance = vehicleAI.GetSegmentObject().intersectionEntranceDirection;
+            int vehicleEntrance = vehicleAI.intersectionEntranceDirection;
             bool isFromPrioritySegment = vehicleAI.GetSegmentObject()._hasPriority;
 
             // Function to check if a vehicle should yield to another based on priority
@@ -143,7 +140,7 @@ namespace TrafficSimulation
                 if (!isFromPrioritySegment && otherHasPriority) return true;
 
                 // If both have same priority status, use normal intersection rules
-                int otherEntrance = otherAI.GetSegmentObject().intersectionEntranceDirection;
+                int otherEntrance = otherAI.intersectionEntranceDirection;
                 if (otherEntrance != vehicleEntrance)
                 {
                     return WillPathsIntersect(vehicle, otherVehicle);
@@ -355,23 +352,156 @@ namespace TrafficSimulation
             CheckQueuedVehicles();
         }
 
-
-        // Rest of the implementation remains the same...
-        void TriggerLight(GameObject _vehicle)
+        bool IsVehicleQueuedFirst(GameObject vehicle1, GameObject vehicle2)
         {
-            VehicleAI vehicleAI = _vehicle.GetComponent<VehicleAI>();
-            int vehicleSegment = vehicleAI.GetSegmentVehicleIsIn();
-
-            if (IsRedLightSegment(vehicleSegment))
+            // Check each queue in order to find which vehicle appears first
+            foreach (GameObject queuedVehicle in turningLeftQueue.Concat(turningRightQueue).Concat(turningStraightQueue))
             {
-                vehicleAI.vehicleStatus = Status.STOP;
-                if (vehicleAI._TurningLeft) turningLeftQueue.Add(_vehicle);
-                else if (vehicleAI._TurningRight) turningRightQueue.Add(_vehicle);
-                else if (vehicleAI._TurningStraight) turningStraightQueue.Add(_vehicle);
+                if (queuedVehicle == vehicle1) return true;
+                if (queuedVehicle == vehicle2) return false;
+            }
+            return false; // Shouldn't reach here if both vehicles are in queues
+        }
+
+
+        bool WillPathsIntersectTrafficLight(GameObject vehicle1, GameObject vehicle2)
+        {
+            VehicleAI ai1 = vehicle1.GetComponent<VehicleAI>();
+            VehicleAI ai2 = vehicle2.GetComponent<VehicleAI>();
+
+            // If one is going straight and other is turning right
+            if (ai1._TurningStraight && ai2._TurningRight)
+            {
+                return IsVehicleToTheRight(vehicle1.transform, vehicle2.transform);
+            }
+            else if (ai2._TurningStraight && ai1._TurningRight)
+            {
+                return ai2.vehicleStatus != Status.STOP && IsVehicleToTheRight(vehicle2.transform, vehicle1.transform);
+            }
+
+            if (IsVehicleQueuedFirst(vehicle1, vehicle2))
+            {
+                return false;
+            }
+
+            if (ai1._isHorizontal == ai2._isHorizontal)
+            {
+                return (ai1._TurningLeft && ai2._TurningStraight) ||
+                        (ai1._TurningLeft && ai2._TurningRight) ||
+                        (ai1._TurningLeft && ai2._TurningLeft) ||
+                        (ai2.vehicleStatus != Status.STOP && (ai1._TurningRight && ai2._TurningLeft)) ||
+                        (ai2.vehicleStatus != Status.STOP && (ai1._TurningStraight && ai2._TurningLeft));
             }
             else
             {
+                return (ai1._TurningLeft && ai2._TurningStraight) ||
+                        (ai1._TurningLeft && ai2._TurningLeft) ||
+                        (ai1._TurningStraight && ai2._TurningStraight) ||
+                        (ai2.vehicleStatus != Status.STOP && (ai1._TurningStraight && ai2._TurningLeft));
+            }
+        }
+
+        bool CanVehicleProceedTrafficLight(GameObject vehicle)
+        {
+            VehicleAI vehicleAI = vehicle.GetComponent<VehicleAI>();
+            int vehicleSegment = vehicleAI.GetSegmentVehicleIsIn();
+
+            // If red light, vehicle cannot proceed under any circumstances
+            if (IsRedLightSegment(vehicleSegment))
+            {
+                return false;
+            }
+
+            // Always check for actual conflicts with vehicles in intersection
+            foreach (GameObject otherVehicle in vehiclesInIntersection)
+            {
+                //Debug.Log(otherVehicle.name);
+                //Log(vehicle.name + " has car in intersection with it: " + otherVehicle.name);
+                if (otherVehicle.GetComponent<VehicleAI>().vehicleStatus == Status.STOP)
+                {
+                    //Debug.Log("how could this even go through possibly");
+                    if (!IsFromSameEntrance(vehicle, otherVehicle) && WillPathsIntersectTrafficLight(vehicle, otherVehicle))
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+
+                    /*if(!IsFromSameEntrance(vehicle, otherVehicle))
+                    {
+                        Debug.Log(vehicle.name + " isnt from the same entrance as " + otherVehicle.name);
+                    }
+                    else
+                    {
+                        Debug.Log(vehicle.name + " is from the same entrance as " + otherVehicle.name);
+                    }
+
+                    if (WillPathsIntersect(vehicle, otherVehicle))
+                    {
+                        Debug.Log(vehicle.name + " paths will intersect with " + otherVehicle.name);
+                    }
+                    else
+                    {
+                        Debug.Log("paths wont intersect with " + otherVehicle.name);
+                    }*/
+                    if (!IsFromSameEntrance(vehicle, otherVehicle) && WillPathsIntersect(vehicle, otherVehicle))
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            // For green lights, still respect right-hand rule with other green light vehicles
+            foreach (GameObject otherVehicle in turningRightQueue.Concat(turningStraightQueue).Concat(turningLeftQueue))
+            {
+                if (otherVehicle == vehicle) continue;
+
+                VehicleAI otherAI = otherVehicle.GetComponent<VehicleAI>();
+                int otherSegment = otherAI.GetSegmentVehicleIsIn();
+
+                // Only check priority against other vehicles that also have a green light
+                if (!IsRedLightSegment(otherSegment) && !IsFromSameEntrance(vehicle, otherVehicle))
+                {
+                    if (WillPathsIntersectTrafficLight(vehicle, otherVehicle))
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        void TriggerLight(GameObject _vehicle)
+        {
+            VehicleAI vehicleAI = _vehicle.GetComponent<VehicleAI>();
+
+            //Debug.Log("ADDED " + _vehicle.name);
+            // Add vehicle to appropriate queue based on turning direction
+            if (vehicleAI._TurningLeft)
+            {
+                turningLeftQueue.Add(_vehicle);
+            }
+            else if (vehicleAI._TurningRight)
+            {
+                turningRightQueue.Add(_vehicle);
+            }
+            else if (vehicleAI._TurningStraight)
+            {
+                turningStraightQueue.Add(_vehicle);
+            }
+
+            // Check if vehicle can proceed
+            if (CanVehicleProceedTrafficLight(_vehicle))
+            {
                 vehicleAI.vehicleStatus = Status.SLOW_DOWN;
+                vehiclesInIntersection.Add(_vehicle);
+                //CheckQueuedVehiclesTrafficLight();
+            }
+            else
+            {
+                vehicleAI.vehicleStatus = Status.STOP;
             }
         }
 
@@ -379,11 +509,69 @@ namespace TrafficSimulation
         {
             VehicleAI vehicleAI = _vehicle.GetComponent<VehicleAI>();
 
-            if (vehicleAI._TurningLeft) turningLeftQueue.Remove(_vehicle);
-            else if (vehicleAI._TurningRight) turningRightQueue.Remove(_vehicle);
-            else if (vehicleAI._TurningStraight) turningStraightQueue.Remove(_vehicle);
+            //Debug.Log("LEFT " + _vehicle.name);
+
+            // Remove from appropriate queue
+            if (vehicleAI._TurningLeft)
+            {
+                turningLeftQueue.Remove(_vehicle);
+            }
+            else if (vehicleAI._TurningRight)
+            {
+                turningRightQueue.Remove(_vehicle);
+            }
+            else if (vehicleAI._TurningStraight)
+            {
+                turningStraightQueue.Remove(_vehicle);
+            }
 
             vehicleAI.vehicleStatus = Status.GO;
+            vehiclesInIntersection.RemoveAll(v => v.GetInstanceID() == _vehicle.GetInstanceID());
+
+            // Reset turning flags
+            vehicleAI._TurningLeft = false;
+            vehicleAI._TurningRight = false;
+            vehicleAI._TurningStraight = false;
+
+            // Only check queued vehicles with green lights
+            CheckQueuedVehiclesTrafficLight();
+        }
+
+        void CheckQueuedVehiclesTrafficLight()
+        {
+            List<GameObject> vehiclesToCheck = new List<GameObject>();
+
+            // Collect all queued vehicles that have a green light
+            foreach (GameObject vehicle in turningRightQueue.Concat(turningStraightQueue).Concat(turningLeftQueue))
+            {
+                VehicleAI vehicleAI = vehicle.GetComponent<VehicleAI>();
+                int vehicleSegment = vehicleAI.GetSegmentVehicleIsIn();
+
+                if (!IsRedLightSegment(vehicleSegment))
+                {
+                    vehiclesToCheck.Add(vehicle);
+                }
+            }
+
+            // Check if any green light vehicles can proceed
+            foreach (GameObject vehicle in vehiclesToCheck)
+            {
+                if (CanVehicleProceedTrafficLight(vehicle))
+                {
+                    vehicle.GetComponent<VehicleAI>().vehicleStatus = Status.SLOW_DOWN;
+                    vehiclesInIntersection.Add(vehicle);
+                }
+            }
+        }
+
+        void SwitchLights()
+        {
+            // Switch light groups
+            if (currentRedLightsGroup == 1) currentRedLightsGroup = 2;
+            else if (currentRedLightsGroup == 2) currentRedLightsGroup = 1;
+
+            // Wait for orange light duration before checking queued vehicles
+            Invoke("CheckQueuedVehiclesTrafficLight", orangeLightDuration);
         }
 
         bool IsRedLightSegment(int _vehicleSegment)
@@ -502,5 +690,6 @@ namespace TrafficSimulation
             RestoreQueue(turningRightQueue, memTurningRightQueue);
             RestoreQueue(turningStraightQueue, memTurningStraightQueue);
         }
-    }
+
+        }
 }

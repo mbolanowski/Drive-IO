@@ -1,9 +1,14 @@
 using UnityEngine;
 using System.Collections;
 using static UnityEditor.PlayerSettings;
+using TrafficSimulation;
 
 public class VehicleControllerWithGears : MonoBehaviour
 {
+    public TrafficSystem trafficSystem;
+    public bool _isHorizontal = false;
+    public int intersectionEntranceDirection = 5;
+
     public float[] gearAcceleration = { 10f, 15f, 20f, 25f, 30f, 5f }; // Acceleration for each gear including reverse gear
     public float[] gearSteering = { 4f, 3.5f, 3f, 2.5f, 2f, 2f };      // Steering sensitivity for each gear including reverse gear
     public float[] gearSpeedLimits = { 10f, 20f, 30f, 40f, 50f };      // Speed limit for each forward gear
@@ -49,6 +54,8 @@ public class VehicleControllerWithGears : MonoBehaviour
 
     public PlayerManager pm;
     public WarningSystemController wsc;
+
+    
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -78,6 +85,14 @@ public class VehicleControllerWithGears : MonoBehaviour
         if (moveInput >= -0.1f)
         {
             isSKeyReleased = true;
+        }
+
+        foreach (Segment segment in trafficSystem.segments)
+        {
+            if (segment.IsOnSegment(this.transform.position))
+            {
+                _isHorizontal = segment._trueIfHorizontal;
+            }
         }
 
         // Check for blinker input
@@ -414,5 +429,11 @@ public class VehicleControllerWithGears : MonoBehaviour
     public float GetAcceleration()
     {
         return currentAcceleration;
+    }
+
+    public bool GetIsAnyBlinkerOn()
+    {
+        if (GetIsLeftBlinkerOn() || GetIsRightBlinkerOn()) return true;
+        else return false;
     }
 }

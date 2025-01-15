@@ -45,17 +45,23 @@ namespace TrafficSimulation {
 
         [Header("Radar")]
 
+        [Header("AI Vehicle Radar")]
         [Tooltip("Empty gameobject from where the rays will be casted")]
         public Transform raycastAnchor;
+        [Tooltip("Length of the casted rays for AI vehicles")]
+        public float raycastLengthAI = 5;
+        [Tooltip("Spacing between each rays for AI vehicles")]
+        public int raySpacingAI = 2;
+        [Tooltip("Number of rays to be casted for AI vehicles")]
+        public int raysNumberAI = 6;
 
-        [Tooltip("Length of the casted rays")]
-        public float raycastLength = 5;
-
-        [Tooltip("Spacing between each rays")]
-        public int raySpacing = 2;
-
-        [Tooltip("Number of rays to be casted")]
-        public int raysNumber = 6;
+        [Header("Player Radar")]
+        [Tooltip("Length of the casted rays for player detection")]
+        public float raycastLengthPlayer = 8;
+        [Tooltip("Spacing between each rays for player detection")]
+        public int raySpacingPlayer = 3;
+        [Tooltip("Number of rays to be casted for player detection")]
+        public int raysNumberPlayer = 4;
 
         [Tooltip("If detected vehicle is below this distance, ego vehicle will stop")]
         public float emergencyBrakeThresh = 2f;
@@ -67,6 +73,8 @@ namespace TrafficSimulation {
         public float slowDownThresh = 4f;
 
         private float timeSinceLastCheck = 0f;
+
+        public int intersectionEntranceDirection = 5; //0=UP, 1=RIGHT, 2=DOWN, 3=LEFT
 
         [SerializeField] public Status vehicleStatus = Status.GO;
 
@@ -120,6 +128,8 @@ namespace TrafficSimulation {
 
             initMaxSpeed = wheelDrive.maxSpeed;
             SetWaypointVehicleIsOn();
+
+            intersectionEntranceDirection = GetSegmentObject().intersectionEntranceDirection;
         }
 
         void Update(){
@@ -266,7 +276,7 @@ namespace TrafficSimulation {
                         if (otherVehicle.maxSpeed < wheelDrive.maxSpeed && dotFront > .8f){
                             //float ms = Mathf.Max(wheelDrive.GetSpeedMS(otherVehicle.maxSpeed) - .5f, .1f);
                             //wheelDrive.maxSpeed = wheelDrive.GetSpeedUnit(ms);
-                            wheelDrive.maxSpeed = otherVehicle.maxSpeed * 0.8f;
+                            //wheelDrive.maxSpeed = otherVehicle.maxSpeed * 0.8f;
                         }
                         
                         //If the two vehicles are too close, and facing the same direction, brake the ego vehicle
@@ -384,6 +394,7 @@ namespace TrafficSimulation {
 
                         string otherTurn = "";
                         otherTurn = vm._declaredDirection;
+                        
 
                         if (vm.GetMaxSpeed() * 5f < wheelDrive.maxSpeed && dotFront > .8f)
                         {
@@ -410,34 +421,158 @@ namespace TrafficSimulation {
                             brake = 0f;
                         }
 
-                        if (this.GetComponent<VehicleAI>().vehicleStatus == Status.SLOW_DOWN)
+
+                        VehicleControllerWithGears vsc = obstacle.GetComponent<VehicleControllerWithGears>();
+                        Vector3 directionToOther = transform.position - vsc.transform.position;
+                        float dotProduct = Vector3.Dot(vsc.transform.right, directionToOther.normalized);
+                        float value = 1.0f;
+
+                        if (this.GetComponent<VehicleAI>().vehicleStatus == Status.SLOW_DOWN && (this.GetComponent<VehicleAI>().intersectionEntranceDirection != vsc.intersectionEntranceDirection))
                         {
-                            if (otherTurn == "right" && thisTurn != 0)
+                            if (thisTurn == 0 && otherTurn == "right")
                             {
-                                if (hitDist < intersectionBrake)
-                                {
-                                    acc = 0;
-                                    brake = 1;
-                                    
-                                }
-                                else
-                                {
-                                }
+
                             }
-                            else if (otherTurn == "straight" && thisTurn == 1)
+                            else if (thisTurn == 0 && otherTurn == "straight")
                             {
-                                if (hitDist < intersectionBrake)
-                                {
-                                    acc = 0;
-                                    brake = 1;
-                                }
-                                else
+                                if (vsc._isHorizontal == _isHorizontal)
                                 {
 
                                 }
+                                else
+                                {
+                                    if (vsc.currentSpeed > 0.2f)
+                                    {
+                                        if (dotProduct > -value && dotProduct < value)
+                                        {
+                                            acc = 0;
+                                            brake = 1;
+                                        }
+                                    }
+                                }
                             }
-                            else if (otherTurn == "straight" && thisTurn == 0)
+                            else if (thisTurn == 0 && otherTurn == "left")
                             {
+                                if (vsc._isHorizontal == _isHorizontal)
+                                {
+                                    if (vsc.currentSpeed > 0.2f)
+                                    {
+                                        if (dotProduct > -value && dotProduct < value)
+                                        {
+                                            acc = 0;
+                                            brake = 1;
+                                            timeSinceLastCheck += Time.deltaTime;
+                                            if (timeSinceLastCheck >= 5f)
+                                            {
+                                                pm.AddIncident();
+                                                pm.AddIncident();
+                                                wsc.SetInfoText("Wymusiles pierwszenstwo");
+                                                wsc.SetPenaltyText("-2 Life");
+                                                Debug.Log("Wymuszenie pierwszeñstwa.");
+                                                timeSinceLastCheck = 0f;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            else if (thisTurn == 1 && otherTurn == "right")
+                            {
+                                if (vsc._isHorizontal == _isHorizontal)
+                                {
+                                    if (vsc.currentSpeed > 0.2f)
+                                    {
+                                        if (dotProduct > -value && dotProduct < value)
+                                        {
+                                            acc = 0;
+                                            brake = 1;
+                                        }
+                                    }
+                                }
+                            }
+                            else if (thisTurn == 1 && otherTurn == "straight")
+                            {
+                                if (vsc.currentSpeed > 0.2f)
+                                {
+                                    Debug.Log("giga test222");
+                                    if (dotProduct > -value && dotProduct < value)
+                                    {
+                                        Debug.Log("giga test");
+                                        acc = 0;
+                                        brake = 1;
+                                    }
+                                }
+                            }
+                            else if (thisTurn == 1 && otherTurn == "left")
+                            {
+                                if (vsc.currentSpeed > 0.2f)
+                                {
+                                    if (dotProduct > -value && dotProduct < value)
+                                    {
+                                        acc = 0;
+                                        brake = 1;
+                                    }
+                                }
+                            }
+                            else if (thisTurn == 2 && otherTurn == "right")
+                            {
+                                if (vsc._isHorizontal == _isHorizontal)
+                                {
+
+                                }
+                                else // if on the right yield, if on the left its okay
+                                {
+                                    if (dotProduct > 0)
+                                    {
+                                        if (vsc.currentSpeed > 0.2f)
+                                        {
+                                            acc = 0;
+                                            brake = 1;
+                                        }
+                                    }
+                                }
+                            }
+                            else if (thisTurn == 2 && otherTurn == "straight")
+                            {
+                                if (vsc._isHorizontal == _isHorizontal)
+                                {
+
+                                }
+                                else // if on the right yield, if on the left its okay
+                                {
+                                    if (vsc.currentSpeed > 0.2f)
+                                    {
+                                        if (dotProduct > -value && dotProduct < value)
+                                        {
+                                            acc = 0;
+                                            brake = 1;
+                                        }
+                                    }
+                                }
+                            }
+                            else if (thisTurn == 2 && otherTurn == "left")
+                            {
+                                if (vsc.currentSpeed > 0.2f)
+                                {
+                                    Debug.Log("oh yea its real");
+                                    if (dotProduct > -value && dotProduct < value)
+                                    {
+                                        acc = 0;
+                                        brake = 1;
+                                        timeSinceLastCheck += Time.deltaTime;
+                                        if (timeSinceLastCheck >= 5f)
+                                        {
+                                            pm.AddIncident();
+                                            pm.AddIncident();
+                                            wsc.SetInfoText("Wymusiles pierwszenstwo");
+                                            wsc.SetPenaltyText("-2 Life");
+                                            Debug.Log("Wymuszenie pierwszeñstwa.");
+                                            timeSinceLastCheck = 0f;
+                                        }
+                                    }
+                                }
+                            }
+                               
+                                /*timeSinceLastCheck += Time.deltaTime;
                                 if (timeSinceLastCheck >= 5f)
                                 {
                                     pm.AddIncident();
@@ -446,39 +581,7 @@ namespace TrafficSimulation {
                                     wsc.SetPenaltyText("-2 Life");
                                     Debug.Log("Wymuszenie pierwszeñstwa.");
                                     timeSinceLastCheck = 0f;
-                                }
-                                if (hitDist < intersectionBrake)
-                                {
-                                    acc = 0;
-                                    brake = 1;
-                                }
-                                else
-                                {
-
-                                }
-                            }
-                            else if (otherTurn == "left" && thisTurn != 1)
-                            {
-                                timeSinceLastCheck += Time.deltaTime;
-                                if (timeSinceLastCheck >= 5f)
-                                {
-                                    pm.AddIncident();
-                                    pm.AddIncident();
-                                    wsc.SetInfoText("Wymusiles pierwszenstwo");
-                                    wsc.SetPenaltyText("-2 Life");
-                                    Debug.Log("Wymuszenie pierwszeñstwa.");
-                                    timeSinceLastCheck = 0f;
-                                }
-                                if (hitDist < intersectionBrake)
-                                {
-                                    acc = 0;
-                                    brake = 1;
-                                }
-                                else
-                                {
-
-                                }
-                            }
+                                }*/
                         }
                     }
                     ///////////////////////////////////////////////////////////////////
@@ -490,12 +593,6 @@ namespace TrafficSimulation {
                             acc = 0;
                             brake = 1;
                             wheelDrive.maxSpeed = Mathf.Max(wheelDrive.maxSpeed / 2f, wheelDrive.minSpeed);
-                        }
-
-                        //Otherwise if getting relatively close decrease speed
-                         else if(hitDist < slowDownThresh){
-                            acc = .5f;
-                            brake = 0f;
                         }
                     }
                 }
@@ -512,60 +609,111 @@ namespace TrafficSimulation {
         }
 
 
-        GameObject GetDetectedObstacles(out float _hitDist){
+        GameObject GetDetectedObstacles(out float _hitDist)
+        {
             GameObject detectedObstacle = null;
             float minDist = 1000f;
+            float hitDist = -1f;
 
-            float speedFactor = Mathf.Clamp01(wheelDrive.maxSpeed * 0.5f / initMaxSpeed);
-            //raySpacing = Mathf.RoundToInt(Mathf.Lerp(2f, 8f, 1 - speedFactor));
+            // First raycast for AI vehicles
+            GameObject aiObstacle = CastRaysForLayer(
+                raycastAnchor.transform.position,
+                this.transform.forward,
+                raycastLengthAI,
+                raySpacingAI,
+                raysNumberAI,
+                LayerMask.NameToLayer("AutonomousVehicle"),
+                out float aiHitDist
+            );
 
-            float initRay = (raysNumber / 2f) * raySpacing;
-            float hitDist =  -1f;
-            for(float a=-initRay; a<=initRay; a+=raySpacing){
-                CastRay(raycastAnchor.transform.position, a, this.transform.forward, raycastLength, out detectedObstacle, out hitDist);
+            // Second raycast for Player
+            GameObject playerObstacle = CastRaysForLayer(
+                raycastAnchor.transform.position,
+                this.transform.forward,
+                raycastLengthPlayer,
+                raySpacingPlayer,
+                raysNumberPlayer,
+                LayerMask.NameToLayer("Player"),
+                out float playerHitDist
+            );
 
-                if(detectedObstacle == null) continue;
+            GameObject CastRaysForLayer(Vector3 anchor, Vector3 direction, float rayLength, int raySpacing, int raysNumber, int layer, out float outHitDist)
+            {
+                GameObject detectedObstacle = null;
+                float minDist = 1000f;
+                outHitDist = -1f;
 
-                float dist = Vector3.Distance(this.transform.position, detectedObstacle.transform.position);
-                if(dist < minDist) {
-                    minDist = dist;
-                    break;
+                float initRay = (raysNumber / 2f) * raySpacing;
+
+                // Create layer mask for specific layer
+                int layerMask = 1 << layer;
+
+                // Add additional collision layers if needed (only for AI vehicles)
+                if (layer == LayerMask.NameToLayer("AutonomousVehicle"))
+                {
+                    foreach (string layerName in trafficSystem.collisionLayers)
+                    {
+                        int id = 1 << LayerMask.NameToLayer(layerName);
+                        layerMask = layerMask | id;
+                    }
                 }
+
+                for (float a = -initRay; a <= initRay; a += raySpacing)
+                {
+                    GameObject obstacle;
+                    float hitDist;
+                    CastRay(anchor, a, direction, rayLength, layerMask, out obstacle, out hitDist);
+
+                    if (obstacle == null) continue;
+
+                    float dist = Vector3.Distance(this.transform.position, obstacle.transform.position);
+                    if (dist < minDist)
+                    {
+                        minDist = dist;
+                        detectedObstacle = obstacle;
+                        outHitDist = hitDist;
+                    }
+                }
+
+                return detectedObstacle;
+            }
+
+            // Determine which obstacle is closer (if any)
+            if (aiObstacle != null && (playerObstacle == null || aiHitDist < playerHitDist))
+            {
+                detectedObstacle = aiObstacle;
+                hitDist = aiHitDist;
+            }
+            else if (playerObstacle != null)
+            {
+                detectedObstacle = playerObstacle;
+                hitDist = playerHitDist;
             }
 
             _hitDist = hitDist;
             return detectedObstacle;
         }
 
-        
-        void CastRay(Vector3 _anchor, float _angle, Vector3 _dir, float _length, out GameObject _outObstacle, out float _outHitDistance){
+
+        void CastRay(Vector3 _anchor, float _angle, Vector3 _dir, float _length, int layerMask, out GameObject _outObstacle, out float _outHitDistance)
+        {
             _outObstacle = null;
             _outHitDistance = -1f;
 
-            //Detect hit only on the autonomous vehicle layer
-            int layer = 1 << LayerMask.NameToLayer("AutonomousVehicle");
-            int playerLayer = 1 << LayerMask.NameToLayer("Player");
-            int finalMask = layer | playerLayer;
-
-            foreach(string layerName in trafficSystem.collisionLayers){
-                int id = 1 << LayerMask.NameToLayer(layerName);
-                finalMask = finalMask | id;
-            }
-
             RaycastHit hit;
-            if(Physics.Raycast(_anchor, Quaternion.Euler(0, _angle, 0) * _dir, out hit, _length, finalMask)){
+            if (Physics.Raycast(_anchor, Quaternion.Euler(0, _angle, 0) * _dir, out hit, _length, layerMask))
+            {
                 _outObstacle = hit.collider.gameObject;
                 _outHitDistance = hit.distance;
                 Debug.DrawRay(_anchor, Quaternion.Euler(0, _angle, 0) * _dir * _length, new Color(0, 1, 0, 0.5f));
             }
             else
             {
-                //Draw raycast
                 Debug.DrawRay(_anchor, Quaternion.Euler(0, _angle, 0) * _dir * _length, new Color(1, 0, 0, 0.5f));
             }
         }
 
-        int GetNextSegmentId(){
+    int GetNextSegmentId(){
             if(trafficSystem.segments[currentTarget.segment].nextSegments.Count == 0)
                 return 0;
             int c = Random.Range(0, trafficSystem.segments[currentTarget.segment].nextSegments.Count);
