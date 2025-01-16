@@ -52,6 +52,8 @@ public class SpawnManager : MonoBehaviour
 
             vc.currentSpeed = 0.0f;
             vc.currentAcceleration = 0.0f;
+            playerObject.GetComponent<Rigidbody>().velocity = Vector3.zero;
+            playerObject.GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
 
             Debug.Log("Player respawned at: " + selectedSpawnPoint.name);
         }

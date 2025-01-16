@@ -55,6 +55,8 @@ public class VehicleControllerWithGears : MonoBehaviour
     public PlayerManager pm;
     public WarningSystemController wsc;
 
+    public GameObject cameraMover;
+
     
     void Start()
     {
@@ -115,11 +117,13 @@ public class VehicleControllerWithGears : MonoBehaviour
             isSKeyReleased = true; // Allow reversing again after moving forward
             decelerationTime = 0f; // Reset deceleration timer
             isDecelerating = false; // Reset deceleration state
+            cameraMover.transform.localPosition = new Vector3(0, 0.08f, 5.9f);
         }
         else if (moveInput < -0.1f)
         {
             if (rb.velocity.magnitude < 0.1f)
             {
+                cameraMover.transform.localPosition = new Vector3(0, 0.08f, -1.9f);  
                 // Begin reversing when stationary
                 currentGear = gearAcceleration.Length - 1; // Switch to reverse gear
                 currentAcceleration = Mathf.MoveTowards(currentAcceleration, -gearAcceleration[currentGear], accelerationRate * Time.fixedDeltaTime);
@@ -390,17 +394,26 @@ public class VehicleControllerWithGears : MonoBehaviour
         // Rotate the front wheels around their local axis
         if (frontLeftWheel != null && frontRightWheel != null)
         {
-            float rotationAngle = steeringInput * 35f; // Example: 45 degrees for full steering input
+            float targetRotationAngle = steeringInput * 35f; // Example: 35 degrees for full steering input
+
+            // Check if the car is moving backward
             if (Vector3.Dot(rb.velocity, transform.forward) < 0)
             {
-                frontLeftWheel.localRotation = Quaternion.Euler(0f, -rotationAngle, 0f);
-                frontRightWheel.localRotation = Quaternion.Euler(180f, -rotationAngle, 180f);
+                targetRotationAngle = -targetRotationAngle;
             }
-            else
-            {
-                frontLeftWheel.localRotation = Quaternion.Euler(0f, rotationAngle, 0f);
-                frontRightWheel.localRotation = Quaternion.Euler(180f, rotationAngle, 180f);
-            }
+
+            // Get the current local rotations
+            Quaternion currentLeftRotation = frontLeftWheel.localRotation;
+            Quaternion currentRightRotation = frontRightWheel.localRotation;
+
+            // Calculate the target rotations
+            Quaternion targetLeftRotation = Quaternion.Euler(0f, targetRotationAngle, 0f);
+            Quaternion targetRightRotation = Quaternion.Euler(180f, targetRotationAngle, 180f);
+
+            // Interpolate rotations using Lerp
+            float lerpSpeed = 10f; // Adjust for desired smoothness
+            frontLeftWheel.localRotation = Quaternion.Lerp(currentLeftRotation, targetLeftRotation, Time.deltaTime * lerpSpeed);
+            frontRightWheel.localRotation = Quaternion.Lerp(currentRightRotation, targetRightRotation, Time.deltaTime * lerpSpeed);
         }
     }
 

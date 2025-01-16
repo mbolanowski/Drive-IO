@@ -92,7 +92,7 @@ namespace TrafficSimulation
 
         bool HasConflictingVehicleInIntersection(GameObject vehicle)
         {
-            VehicleAI vehicleAI = vehicle.GetComponent<VehicleAI>();
+            /*VehicleAI vehicleAI = vehicle.GetComponent<VehicleAI>();
 
             foreach (GameObject otherVehicle in vehiclesInIntersection)
             {
@@ -104,7 +104,7 @@ namespace TrafficSimulation
                 {
                     return true;
                 }
-            }
+            }*/
             return false;
         }
 
@@ -275,7 +275,7 @@ namespace TrafficSimulation
         // Rest of the methods remain the same as in previous implementation...
         void OnTriggerEnter(Collider _other)
         {
-            if (IsAlreadyInIntersection(_other.gameObject) || Time.timeSinceLevelLoad < .5f) return;
+            //if (IsAlreadyInIntersection(_other.gameObject) || Time.timeSinceLevelLoad < .5f) return;
 
             if (_other.tag == "AutonomousVehicle" && intersectionType == IntersectionType.STOP)
                 TriggerStop(_other.gameObject);
@@ -329,19 +329,19 @@ namespace TrafficSimulation
             // Remove from appropriate queue
             if (vehicleAI._TurningLeft)
             {
-                turningLeftQueue.Remove(_vehicle);
+                turningLeftQueue.RemoveAll(v => v.GetInstanceID() == _vehicle.GetInstanceID());
             }
             else if (vehicleAI._TurningRight)
             {
-                turningRightQueue.Remove(_vehicle);
+                turningRightQueue.RemoveAll(v => v.GetInstanceID() == _vehicle.GetInstanceID());
             }
             else if (vehicleAI._TurningStraight)
             {
-                turningStraightQueue.Remove(_vehicle);
+                turningStraightQueue.RemoveAll(v => v.GetInstanceID() == _vehicle.GetInstanceID());
             }
 
             vehicleAI.vehicleStatus = Status.GO;
-            vehiclesInIntersection.Remove(_vehicle);
+            vehiclesInIntersection.RemoveAll(v => v.GetInstanceID() == _vehicle.GetInstanceID());
 
             // Reset turning flags
             vehicleAI._TurningLeft = false;
@@ -389,15 +389,15 @@ namespace TrafficSimulation
                 return (ai1._TurningLeft && ai2._TurningStraight) ||
                         (ai1._TurningLeft && ai2._TurningRight) ||
                         (ai1._TurningLeft && ai2._TurningLeft) ||
-                        (ai2.vehicleStatus != Status.STOP && (ai1._TurningRight && ai2._TurningLeft)) ||
-                        (ai2.vehicleStatus != Status.STOP && (ai1._TurningStraight && ai2._TurningLeft));
+                        ((ai2.vehicleStatus != Status.STOP || ai2.vehicleStatus != Status.GO) && (ai1._TurningRight && ai2._TurningLeft)) ||
+                        ((ai2.vehicleStatus != Status.STOP || ai2.vehicleStatus != Status.GO) && (ai1._TurningStraight && ai2._TurningLeft));
             }
             else
             {
                 return (ai1._TurningLeft && ai2._TurningStraight) ||
                         (ai1._TurningLeft && ai2._TurningLeft) ||
                         (ai1._TurningStraight && ai2._TurningStraight) ||
-                        (ai2.vehicleStatus != Status.STOP && (ai1._TurningStraight && ai2._TurningLeft));
+                        ((ai2.vehicleStatus != Status.STOP || ai2.vehicleStatus != Status.GO) && (ai1._TurningStraight && ai2._TurningLeft));
             }
         }
 
@@ -514,15 +514,15 @@ namespace TrafficSimulation
             // Remove from appropriate queue
             if (vehicleAI._TurningLeft)
             {
-                turningLeftQueue.Remove(_vehicle);
+                turningLeftQueue.RemoveAll(v => v.GetInstanceID() == _vehicle.GetInstanceID());
             }
             else if (vehicleAI._TurningRight)
             {
-                turningRightQueue.Remove(_vehicle);
+                turningRightQueue.RemoveAll(v => v.GetInstanceID() == _vehicle.GetInstanceID());
             }
             else if (vehicleAI._TurningStraight)
             {
-                turningStraightQueue.Remove(_vehicle);
+                turningStraightQueue.RemoveAll(v => v.GetInstanceID() == _vehicle.GetInstanceID());
             }
 
             vehicleAI.vehicleStatus = Status.GO;
@@ -691,5 +691,17 @@ namespace TrafficSimulation
             RestoreQueue(turningStraightQueue, memTurningStraightQueue);
         }
 
+
+        void Update()
+        {
+            if(this.gameObject.name == "Intersection-2")
+            {
+               foreach(GameObject carrr in vehiclesInIntersection)
+                {
+                    Debug.Log(carrr.name);
+                }
+            }
         }
+
+    }
 }

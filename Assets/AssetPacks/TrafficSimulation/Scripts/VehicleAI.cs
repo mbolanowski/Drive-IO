@@ -30,6 +30,7 @@ namespace TrafficSimulation {
 
     public class VehicleAI : MonoBehaviour
     {
+        public bool hasPriority = false;
         [Header("Traffic System")]
         [Tooltip("Current active traffic system")]
         public TrafficSystem trafficSystem;
@@ -126,9 +127,11 @@ namespace TrafficSimulation {
                 wsc = GameObject.Find("Warning System").GetComponent<WarningSystemController>();
             }
 
+
             initMaxSpeed = wheelDrive.maxSpeed;
             SetWaypointVehicleIsOn();
 
+            hasPriority = GetSegmentObject()._hasPriority;
             intersectionEntranceDirection = GetSegmentObject().intersectionEntranceDirection;
         }
 
@@ -138,7 +141,15 @@ namespace TrafficSimulation {
             if (trafficSystem == null)
                 return;
 
-                    WaypointChecker();
+/*            if(transform.rotation.x != 0 || transform.rotation.z != 0)
+            {
+                Vector3 eulerRotation = transform.rotation.eulerAngles;
+                eulerRotation.x = 0f;
+                eulerRotation.z = 0f;
+                transform.rotation = Quaternion.Euler(eulerRotation);
+            }*/
+
+            WaypointChecker();
             HandleBlinkers();
             MoveVehicle();
         }
@@ -305,7 +316,7 @@ namespace TrafficSimulation {
                         else if(hitDist < slowDownThresh){
                             acc = .5f;
                             brake = 0f;
-                            wheelDrive.maxSpeed = Mathf.Max(wheelDrive.maxSpeed / 1.5f, wheelDrive.minSpeed);
+                            wheelDrive.maxSpeed = Mathf.Max(wheelDrive.maxSpeed / 1.9f, wheelDrive.minSpeed);
                         }
                         if (otherVehicleAI.vehicleStatus == Status.SLOW_DOWN && this.GetComponent<VehicleAI>().vehicleStatus == Status.SLOW_DOWN)
                         {
@@ -317,23 +328,23 @@ namespace TrafficSimulation {
                             {
                                 if ((thisHorizontal && otherHorizontal) || (!thisHorizontal && !otherHorizontal))
                                 {
-                                    acc = 0;
-                                    brake = 1;
+                                    //acc = 0;
+                                    //brake = 1;
                                 }
                             }
                             else if (thisTurn == 1 && otherTurn == 1)
                             {
                                 if(placeInQueue > otherVehicleAI.placeInQueue && ((thisHorizontal && otherHorizontal)) || ((!thisHorizontal && !otherHorizontal)))
                                 {
-                                    acc = 0;
-                                    brake = 1;
-                                    float dotRight = Vector3.Dot(this.transform.forward, otherVehicle.transform.right);
+                                    //acc = 0;
+                                    //brake = 1;
+                                    //float dotRight = Vector3.Dot(this.transform.forward, otherVehicle.transform.right);
                                     //Right
-                                    if (dotRight > 0.3f) steering = .4f;
+                                    //if (dotRight > 0.3f) steering = .4f;
                                     //Left
-                                    else if (dotRight < -0.3f) steering = -.4f;
+                                    //else if (dotRight < -0.3f) steering = -.4f;
                                     //Middle
-                                    else steering = -.7f;
+                                    //else steering = -.7f;
                                 }
                                 else
                                 {
@@ -341,16 +352,16 @@ namespace TrafficSimulation {
                             }
                             else if (thisTurn == 1 && otherTurn == 2)
                             {
-                                acc = 0;
-                                brake = 1;
+                                //acc = 0;
+                                //brake = 1;
                             }
 
                             else if (thisTurn == 2 && otherTurn == 0)
                             {
                                 if ((!(thisHorizontal && otherHorizontal)) || (!(thisHorizontal && !otherHorizontal)))
                                 {
-                                    acc = 0;
-                                    brake = 1;
+                                    //acc = 0;
+                                    //brake = 1;
                                 }
                                 else
                                 {
@@ -366,8 +377,8 @@ namespace TrafficSimulation {
                                 }
                                 else
                                 {
-                                    acc = 0;
-                                    brake = 1;
+                                    //acc = 0;
+                                    //brake = 1;
                                 }
                             }
 
@@ -411,14 +422,14 @@ namespace TrafficSimulation {
 
                         else if (hitDist < emergencyBrakeThresh && dotFront <= .8f)
                         {
-                            acc = -.3f;
-                            brake = 0f;
+                            //acc = -.3f;
+                            acc = 0;
+                            brake = 1f;
                             wheelDrive.maxSpeed = Mathf.Max(wheelDrive.maxSpeed / 2f, wheelDrive.minSpeed);
                         }
-                        else if (hitDist < slowDownThresh)
+                        else if (hitDist < slowDownThresh + 0.3f)
                         {
-                            acc = .5f;
-                            brake = 0f;
+                            wheelDrive.maxSpeed = Mathf.Max(wheelDrive.maxSpeed / 2f, wheelDrive.minSpeed);
                         }
 
 
@@ -447,6 +458,19 @@ namespace TrafficSimulation {
                                         {
                                             acc = 0;
                                             brake = 1;
+                                            timeSinceLastCheck += Time.deltaTime;
+                                            if (timeSinceLastCheck >= 5f)
+                                            {
+                                                if (!pm._hasRightOfWay && hasPriority)
+                                                {
+                                                    pm.AddIncident();
+                                                    pm.AddIncident();
+                                                    wsc.SetInfoText("Wymusiles pierwszenstwo");
+                                                    wsc.SetPenaltyText("-2 Life");
+                                                    Debug.Log("Wymuszenie pierwszeñstwa.1" + this.name);
+                                                    timeSinceLastCheck = 0f;
+                                                }
+                                            }
                                         }
                                     }
                                 }
@@ -464,12 +488,19 @@ namespace TrafficSimulation {
                                             timeSinceLastCheck += Time.deltaTime;
                                             if (timeSinceLastCheck >= 5f)
                                             {
-                                                pm.AddIncident();
-                                                pm.AddIncident();
-                                                wsc.SetInfoText("Wymusiles pierwszenstwo");
-                                                wsc.SetPenaltyText("-2 Life");
-                                                Debug.Log("Wymuszenie pierwszeñstwa.");
-                                                timeSinceLastCheck = 0f;
+                                                if ((pm._hasRightOfWay == hasPriority) || (!pm._hasRightOfWay && hasPriority))
+                                                {
+                                                    if (dotProduct > 0.3f)
+                                                    {
+                                                        pm.AddIncident();
+                                                        pm.AddIncident();
+                                                        wsc.SetInfoText("Wymusiles pierwszenstwo");
+                                                        wsc.SetPenaltyText("-2 Life");
+                                                        Debug.Log("Wymuszenie pierwszeñstwa.2 " + this.name);
+
+                                                        timeSinceLastCheck = 0f;
+                                                    }
+                                                }
                                             }
                                         }
                                     }
@@ -485,6 +516,18 @@ namespace TrafficSimulation {
                                         {
                                             acc = 0;
                                             brake = 1;
+                                            if (timeSinceLastCheck >= 5f)
+                                            {
+                                                if (!pm._hasRightOfWay && hasPriority)
+                                                {
+                                                    pm.AddIncident();
+                                                    pm.AddIncident();
+                                                    wsc.SetInfoText("Wymusiles pierwszenstwo");
+                                                    wsc.SetPenaltyText("-2 Life");
+                                                    Debug.Log("Wymuszenie pierwszeñstwa.3" + this.name);
+                                                    timeSinceLastCheck = 0f;
+                                                }
+                                            }
                                         }
                                     }
                                 }
@@ -493,12 +536,24 @@ namespace TrafficSimulation {
                             {
                                 if (vsc.currentSpeed > 0.2f)
                                 {
-                                    Debug.Log("giga test222");
+                                    //Debug.Log("giga test222");
                                     if (dotProduct > -value && dotProduct < value)
                                     {
-                                        Debug.Log("giga test");
+                                        //Debug.Log("giga test");
                                         acc = 0;
                                         brake = 1;
+                                        if (timeSinceLastCheck >= 5f)
+                                        {
+                                            if (!pm._hasRightOfWay && hasPriority)
+                                            {
+                                                pm.AddIncident();
+                                                pm.AddIncident();
+                                                wsc.SetInfoText("Wymusiles pierwszenstwo");
+                                                wsc.SetPenaltyText("-2 Life");
+                                                Debug.Log("Wymuszenie pierwszeñstwa.4" + this.name);
+                                                timeSinceLastCheck = 0f;
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -510,6 +565,18 @@ namespace TrafficSimulation {
                                     {
                                         acc = 0;
                                         brake = 1;
+                                        if (timeSinceLastCheck >= 5f)
+                                        {
+                                            if (!pm._hasRightOfWay && hasPriority)
+                                            {
+                                                pm.AddIncident();
+                                                pm.AddIncident();
+                                                wsc.SetInfoText("Wymusiles pierwszenstwo");
+                                                wsc.SetPenaltyText("-2 Life");
+                                                Debug.Log("Wymuszenie pierwszeñstwa.5" + this.name);
+                                                timeSinceLastCheck = 0f;
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -527,6 +594,18 @@ namespace TrafficSimulation {
                                         {
                                             acc = 0;
                                             brake = 1;
+                                            if (timeSinceLastCheck >= 5f)
+                                            {
+                                                if (!pm._hasRightOfWay && hasPriority)
+                                                {
+                                                    pm.AddIncident();
+                                                    pm.AddIncident();
+                                                    wsc.SetInfoText("Wymusiles pierwszenstwo");
+                                                    wsc.SetPenaltyText("-2 Life");
+                                                    Debug.Log("Wymuszenie pierwszeñstwa.6" + this.name);
+                                                    timeSinceLastCheck = 0f;
+                                                }
+                                            }
                                         }
                                     }
                                 }
@@ -545,6 +624,18 @@ namespace TrafficSimulation {
                                         {
                                             acc = 0;
                                             brake = 1;
+                                            if (timeSinceLastCheck >= 5f)
+                                            {
+                                                if (!pm._hasRightOfWay && hasPriority)
+                                                {
+                                                    pm.AddIncident();
+                                                    pm.AddIncident();
+                                                    wsc.SetInfoText("Wymusiles pierwszenstwo");
+                                                    wsc.SetPenaltyText("-2 Life");
+                                                    Debug.Log("Wymuszenie pierwszeñstwa.7" + this.name);
+                                                    timeSinceLastCheck = 0f;
+                                                }
+                                            }
                                         }
                                     }
                                 }
@@ -553,7 +644,7 @@ namespace TrafficSimulation {
                             {
                                 if (vsc.currentSpeed > 0.2f)
                                 {
-                                    Debug.Log("oh yea its real");
+                                    //Debug.Log("oh yea its real");
                                     if (dotProduct > -value && dotProduct < value)
                                     {
                                         acc = 0;
@@ -561,12 +652,15 @@ namespace TrafficSimulation {
                                         timeSinceLastCheck += Time.deltaTime;
                                         if (timeSinceLastCheck >= 5f)
                                         {
-                                            pm.AddIncident();
-                                            pm.AddIncident();
-                                            wsc.SetInfoText("Wymusiles pierwszenstwo");
-                                            wsc.SetPenaltyText("-2 Life");
-                                            Debug.Log("Wymuszenie pierwszeñstwa.");
-                                            timeSinceLastCheck = 0f;
+                                            if ((pm._hasRightOfWay == hasPriority) || (!pm._hasRightOfWay && hasPriority))
+                                            {
+                                                pm.AddIncident();
+                                                pm.AddIncident();
+                                                wsc.SetInfoText("Wymusiles pierwszenstwo");
+                                                wsc.SetPenaltyText("-2 Life");
+                                                Debug.Log("Wymuszenie pierwszeñstwa.8" + this.name);
+                                                timeSinceLastCheck = 0f;
+                                            }
                                         }
                                     }
                                 }

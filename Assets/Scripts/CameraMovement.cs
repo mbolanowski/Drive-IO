@@ -41,7 +41,7 @@ public class MoveGameObject : MonoBehaviour
         {
             if (mm.gameObject.active)
             {
-                Debug.Log("What");
+                //Debug.Log("What");
                 mm.StartBlinkingTile(vm.GetCurrentTileX(), vm.GetCurrentTileY(), vm.vehicleColor, 0.5f);
                 pm._justSpawned = false;
             }
@@ -50,7 +50,7 @@ public class MoveGameObject : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.gameObject.layer == LayerMask.NameToLayer("Player"))
+        if (other.gameObject.layer == LayerMask.NameToLayer("CameraMover"))
         {
             if (pm._justSpawned)
             {

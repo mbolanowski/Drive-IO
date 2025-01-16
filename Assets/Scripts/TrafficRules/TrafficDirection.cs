@@ -79,10 +79,8 @@ public class TriggerDirectionCheck : MonoBehaviour
     private void OnTriggerEnter(Collider other)
     {
         int layer = other.gameObject.layer;
-        if (layer == LayerMask.NameToLayer("Player")){
-            playerManager.SetHasRightOfWay(rightOfWay);
-        }
-        else if (layer == LayerMask.NameToLayer("Car"))
+
+        if (layer == LayerMask.NameToLayer("Car"))
         {
             CarsController carsController = other.GetComponent<CarsController>();
             if (carsController != null)
