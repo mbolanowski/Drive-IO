@@ -123,7 +123,7 @@ namespace TrafficSimulation
         {
             VehicleAI vehicleAI = vehicle.GetComponent<VehicleAI>();
             int vehicleEntrance = vehicleAI.intersectionEntranceDirection;
-            bool isFromPrioritySegment = vehicleAI.GetSegmentObject()._hasPriority;
+            bool isFromPrioritySegment = vehicleAI.hasPriority;
 
             // Function to check if a vehicle should yield to another based on priority
             bool ShouldYieldTo(GameObject otherVehicle)
@@ -131,7 +131,7 @@ namespace TrafficSimulation
                 if (otherVehicle == vehicle) return false;
 
                 VehicleAI otherAI = otherVehicle.GetComponent<VehicleAI>();
-                bool otherHasPriority = otherAI.GetSegmentObject()._hasPriority;
+                bool otherHasPriority = otherAI.hasPriority;
 
                 // If this vehicle is from a priority segment and the other isn't, don't yield
                 if (isFromPrioritySegment && !otherHasPriority) return false;
@@ -174,7 +174,7 @@ namespace TrafficSimulation
         bool CanVehicleProceed(GameObject vehicle)
         {
             VehicleAI vehicleAI = vehicle.GetComponent<VehicleAI>();
-            bool isFromPrioritySegment = vehicleAI.GetSegmentObject()._hasPriority;
+            bool isFromPrioritySegment = vehicleAI.hasPriority;
 
             // Always check for actual collisions with vehicles in intersection, regardless of priority
             foreach (GameObject otherVehicle in vehiclesInIntersection)
@@ -401,6 +401,23 @@ namespace TrafficSimulation
             }
         }
 
+        bool IsPlayerInVehiclePath(GameObject vehicle)
+        {
+            VehicleAI vehicleAI = vehicle.GetComponent<VehicleAI>();
+
+            // Assuming the vehicle has a forward-facing raycast
+            RaycastHit hit;
+            float rayDistance = 10f; // Adjust based on your needs
+            int playerLayerMask = 1 << LayerMask.NameToLayer("Player");
+
+            if (Physics.Raycast(vehicle.transform.position, vehicle.transform.forward, out hit, rayDistance, playerLayerMask))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
         bool CanVehicleProceedTrafficLight(GameObject vehicle)
         {
             VehicleAI vehicleAI = vehicle.GetComponent<VehicleAI>();
@@ -412,14 +429,17 @@ namespace TrafficSimulation
                 return false;
             }
 
+            // Check if there's a player in the vehicle's path
+            if (IsPlayerInVehiclePath(vehicle))
+            {
+                return false;
+            }
+
             // Always check for actual conflicts with vehicles in intersection
             foreach (GameObject otherVehicle in vehiclesInIntersection)
             {
-                //Debug.Log(otherVehicle.name);
-                //Log(vehicle.name + " has car in intersection with it: " + otherVehicle.name);
                 if (otherVehicle.GetComponent<VehicleAI>().vehicleStatus == Status.STOP)
                 {
-                    //Debug.Log("how could this even go through possibly");
                     if (!IsFromSameEntrance(vehicle, otherVehicle) && WillPathsIntersectTrafficLight(vehicle, otherVehicle))
                     {
                         return false;
@@ -427,24 +447,6 @@ namespace TrafficSimulation
                 }
                 else
                 {
-
-                    /*if(!IsFromSameEntrance(vehicle, otherVehicle))
-                    {
-                        Debug.Log(vehicle.name + " isnt from the same entrance as " + otherVehicle.name);
-                    }
-                    else
-                    {
-                        Debug.Log(vehicle.name + " is from the same entrance as " + otherVehicle.name);
-                    }
-
-                    if (WillPathsIntersect(vehicle, otherVehicle))
-                    {
-                        Debug.Log(vehicle.name + " paths will intersect with " + otherVehicle.name);
-                    }
-                    else
-                    {
-                        Debug.Log("paths wont intersect with " + otherVehicle.name);
-                    }*/
                     if (!IsFromSameEntrance(vehicle, otherVehicle) && WillPathsIntersect(vehicle, otherVehicle))
                     {
                         return false;

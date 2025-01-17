@@ -420,7 +420,7 @@ namespace TrafficSimulation {
                             wheelDrive.maxSpeed = Mathf.Max(wheelDrive.maxSpeed / 2f, wheelDrive.minSpeed);
                         }
 
-                        else if (hitDist < emergencyBrakeThresh && dotFront <= .8f)
+                        else if (hitDist < (emergencyBrakeThresh - 0.3f) && dotFront <= .8f)
                         {
                             //acc = -.3f;
                             acc = 0;
@@ -429,7 +429,7 @@ namespace TrafficSimulation {
                         }
                         else if (hitDist < slowDownThresh + 0.3f)
                         {
-                            wheelDrive.maxSpeed = Mathf.Max(wheelDrive.maxSpeed / 2f, wheelDrive.minSpeed);
+                            wheelDrive.maxSpeed = Mathf.Max(wheelDrive.maxSpeed / 2.2f, wheelDrive.minSpeed);
                         }
 
 
@@ -452,7 +452,7 @@ namespace TrafficSimulation {
                                 }
                                 else
                                 {
-                                    if (vsc.currentSpeed > 0.2f)
+                                    if (vsc.currentSpeed > 0.8f)
                                     {
                                         if (dotProduct > -value && dotProduct < value)
                                         {
@@ -479,7 +479,7 @@ namespace TrafficSimulation {
                             {
                                 if (vsc._isHorizontal == _isHorizontal)
                                 {
-                                    if (vsc.currentSpeed > 0.2f)
+                                    if (vsc.currentSpeed > 0.8f)
                                     {
                                         if (dotProduct > -value && dotProduct < value)
                                         {
@@ -510,7 +510,7 @@ namespace TrafficSimulation {
                             {
                                 if (vsc._isHorizontal == _isHorizontal)
                                 {
-                                    if (vsc.currentSpeed > 0.2f)
+                                    if (vsc.currentSpeed > 0.8f)
                                     {
                                         if (dotProduct > -value && dotProduct < value)
                                         {
@@ -534,7 +534,7 @@ namespace TrafficSimulation {
                             }
                             else if (thisTurn == 1 && otherTurn == "straight")
                             {
-                                if (vsc.currentSpeed > 0.2f)
+                                if (vsc.currentSpeed > 0.8f)
                                 {
                                     //Debug.Log("giga test222");
                                     if (dotProduct > -value && dotProduct < value)
@@ -559,7 +559,7 @@ namespace TrafficSimulation {
                             }
                             else if (thisTurn == 1 && otherTurn == "left")
                             {
-                                if (vsc.currentSpeed > 0.2f)
+                                if (vsc.currentSpeed > 0.8f)
                                 {
                                     if (dotProduct > -value && dotProduct < value)
                                     {
@@ -590,7 +590,7 @@ namespace TrafficSimulation {
                                 {
                                     if (dotProduct > 0)
                                     {
-                                        if (vsc.currentSpeed > 0.2f)
+                                        if (vsc.currentSpeed > 0.8f)
                                         {
                                             acc = 0;
                                             brake = 1;
@@ -618,7 +618,7 @@ namespace TrafficSimulation {
                                 }
                                 else // if on the right yield, if on the left its okay
                                 {
-                                    if (vsc.currentSpeed > 0.2f)
+                                    if (vsc.currentSpeed > 0.8f)
                                     {
                                         if (dotProduct > -value && dotProduct < value)
                                         {
@@ -642,7 +642,7 @@ namespace TrafficSimulation {
                             }
                             else if (thisTurn == 2 && otherTurn == "left")
                             {
-                                if (vsc.currentSpeed > 0.2f)
+                                if (vsc.currentSpeed > 0.8f)
                                 {
                                     //Debug.Log("oh yea its real");
                                     if (dotProduct > -value && dotProduct < value)

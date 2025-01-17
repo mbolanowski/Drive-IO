@@ -9,6 +9,7 @@ public class SpawnManager : MonoBehaviour
     private int chosenSpawnIndex = -1; // Store the index of the chosen spawn point
 
     public VehicleControllerWithGears vc;
+    public GameObject CameraMover;
 
     private void Start()
     {
@@ -56,6 +57,7 @@ public class SpawnManager : MonoBehaviour
             playerObject.GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
 
             Debug.Log("Player respawned at: " + selectedSpawnPoint.name);
+            CameraMover.SetActive(true);
         }
         else
         {

@@ -15,6 +15,7 @@ public class Minimap : MonoBehaviour
     private Dictionary<(int, int), Coroutine> blinkingTiles = new Dictionary<(int, int), Coroutine>();
 
     public PlayerManager pm;
+    public VechicleManager vm;
 
     private void Start()
     {

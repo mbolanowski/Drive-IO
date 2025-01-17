@@ -2,6 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.Tilemaps;
+using static UnityEditor.SceneView;
 
 public class PlayerManager : MonoBehaviour
 {
@@ -20,6 +23,9 @@ public class PlayerManager : MonoBehaviour
     public VechicleManager vm;
     public SpawnManager sm;
     public VehicleControllerWithGears vc;
+    public Minimap mm;
+
+    public GameObject CameraMover;
 
     public float _speedMultiplier = 12f;
 
@@ -34,12 +40,14 @@ public class PlayerManager : MonoBehaviour
     // Store held tiles as a set of (x, y) coordinates
     private HashSet<(int, int)> heldTiles = new HashSet<(int, int)>();
 
+
     private void Start()
     {
         Life1.GetComponent<Renderer>().material.color = vm.vehicleColor;
         Life2.GetComponent<Renderer>().material.color = vm.vehicleColor;
         Life3.GetComponent<Renderer>().material.color = vm.vehicleColor;
     }
+
     public void AddIncident()
     {
         _incidents++;
@@ -59,17 +67,15 @@ public class PlayerManager : MonoBehaviour
 
         if(_lives == 0)
         {
-            Life3.SetActive(true);
-            Life2.SetActive(true);
-            Life1.SetActive(true);
-            sm.RespawnPlayer();
-            _lives = 3;
+            Die();
         }
     }
     
     public void Die()
     {
+        CameraMover.SetActive(false);
         _dead = true;
+        ResetTilesOnDeath();
         _lives = 3;
         sm.RespawnPlayer();
         Life3.SetActive(true);
@@ -88,6 +94,11 @@ public class PlayerManager : MonoBehaviour
     {
         //incidentCount.text = "Wykroczenia: " + _incidents.ToString();
         //Debug.Log(GetAssignedTileCount());
+
+        if(GetAssignedTileCount() > 0)
+        {
+            SceneManager.LoadScene("1");
+        }
     }
 
     public string GetCurrentLane()
@@ -122,6 +133,19 @@ public class PlayerManager : MonoBehaviour
         {
             Debug.LogWarning($"Tile coordinates ({x}, {y}) are out of bounds.");
         }
+    }
+
+    public void ResetTilesOnDeath()
+    {
+        Color color = new Vector4(1.0f, 1.0f, 1.0f, 0.2745f);
+        foreach ((int x, int y) in heldTiles)
+        {
+            
+            mm.SetTileColor(x, y, color);
+        }
+
+        heldTiles.Clear();
+        myPoints.text = GetAssignedTileCount().ToString();
     }
 
     // Check if the tile is owned by this player

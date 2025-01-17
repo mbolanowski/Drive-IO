@@ -59,6 +59,28 @@ namespace TrafficSimulation
         {
             rb = GetComponent<Rigidbody>();
             rb.useGravity = false; // Disable gravity for "air" driving
+            rb.solverIterations = 10; // Default is 6
+            rb.solverVelocityIterations = 10; // Default is 1
+        }
+
+        private void Update()
+        {
+            // Get the current rotation as Euler angles
+            Vector3 currentEuler = rb.rotation.eulerAngles;
+
+            // Modify only the X and Z components
+            if (!Mathf.Approximately(currentEuler.x, 0.0f))
+            {
+                currentEuler.x = 0.0f;
+            }
+
+            if (!Mathf.Approximately(currentEuler.z, 0.0f))
+            {
+                currentEuler.z = 0.0f;
+            }
+
+            // Apply the modified rotation
+            rb.MoveRotation(Quaternion.Euler(currentEuler));
         }
 
         public void Move(float _acceleration, float _steering, float _brake, Status currentStatus)
