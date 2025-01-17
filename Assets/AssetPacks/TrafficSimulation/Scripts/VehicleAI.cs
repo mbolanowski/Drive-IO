@@ -452,7 +452,7 @@ namespace TrafficSimulation {
                                 }
                                 else
                                 {
-                                    if (vsc.currentSpeed > 0.8f)
+                                    if (vsc.currentSpeed > 0.6f)
                                     {
                                         if (dotProduct > -value && dotProduct < value)
                                         {
@@ -479,7 +479,7 @@ namespace TrafficSimulation {
                             {
                                 if (vsc._isHorizontal == _isHorizontal)
                                 {
-                                    if (vsc.currentSpeed > 0.8f)
+                                    if (vsc.currentSpeed > 0.6f)
                                     {
                                         if (dotProduct > -value && dotProduct < value)
                                         {
@@ -510,7 +510,7 @@ namespace TrafficSimulation {
                             {
                                 if (vsc._isHorizontal == _isHorizontal)
                                 {
-                                    if (vsc.currentSpeed > 0.8f)
+                                    if (vsc.currentSpeed > 0.6f)
                                     {
                                         if (dotProduct > -value && dotProduct < value)
                                         {
@@ -534,7 +534,7 @@ namespace TrafficSimulation {
                             }
                             else if (thisTurn == 1 && otherTurn == "straight")
                             {
-                                if (vsc.currentSpeed > 0.8f)
+                                if (vsc.currentSpeed > 0.6f)
                                 {
                                     //Debug.Log("giga test222");
                                     if (dotProduct > -value && dotProduct < value)
@@ -559,7 +559,7 @@ namespace TrafficSimulation {
                             }
                             else if (thisTurn == 1 && otherTurn == "left")
                             {
-                                if (vsc.currentSpeed > 0.8f)
+                                if (vsc.currentSpeed > 0.6f)
                                 {
                                     if (dotProduct > -value && dotProduct < value)
                                     {
@@ -584,13 +584,12 @@ namespace TrafficSimulation {
                             {
                                 if (vsc._isHorizontal == _isHorizontal)
                                 {
-
                                 }
                                 else // if on the right yield, if on the left its okay
                                 {
-                                    if (dotProduct > 0)
+                                    if (dotProduct < 0)
                                     {
-                                        if (vsc.currentSpeed > 0.8f)
+                                        if (vsc.currentSpeed > 0.4f)
                                         {
                                             acc = 0;
                                             brake = 1;
@@ -618,7 +617,7 @@ namespace TrafficSimulation {
                                 }
                                 else // if on the right yield, if on the left its okay
                                 {
-                                    if (vsc.currentSpeed > 0.8f)
+                                    if (vsc.currentSpeed > 0.6f)
                                     {
                                         if (dotProduct > -value && dotProduct < value)
                                         {
@@ -642,7 +641,7 @@ namespace TrafficSimulation {
                             }
                             else if (thisTurn == 2 && otherTurn == "left")
                             {
-                                if (vsc.currentSpeed > 0.8f)
+                                if (vsc.currentSpeed > 0.6f)
                                 {
                                     //Debug.Log("oh yea its real");
                                     if (dotProduct > -value && dotProduct < value)

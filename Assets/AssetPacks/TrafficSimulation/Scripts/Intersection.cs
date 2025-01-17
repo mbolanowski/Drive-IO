@@ -692,18 +692,5 @@ namespace TrafficSimulation
             RestoreQueue(turningRightQueue, memTurningRightQueue);
             RestoreQueue(turningStraightQueue, memTurningStraightQueue);
         }
-
-
-        void Update()
-        {
-            if(this.gameObject.name == "Intersection-2")
-            {
-               foreach(GameObject carrr in vehiclesInIntersection)
-                {
-                    Debug.Log(carrr.name);
-                }
-            }
-        }
-
     }
 }

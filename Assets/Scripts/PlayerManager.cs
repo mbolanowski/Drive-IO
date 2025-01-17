@@ -97,7 +97,7 @@ public class PlayerManager : MonoBehaviour
 
         if(GetAssignedTileCount() > 0)
         {
-            SceneManager.LoadScene("1");
+            //SceneManager.LoadScene("1");
         }
     }
 
