@@ -14232,6 +14232,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b62b614770d0c2a419619d19db050f2f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  intersection: {fileID: 577139663}
   playerPosition: {x: 0, y: 0}
   playerPrefab: {fileID: 704167241}
   carObjects:

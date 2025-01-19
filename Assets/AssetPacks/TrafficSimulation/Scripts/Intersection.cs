@@ -28,6 +28,8 @@ namespace TrafficSimulation
 
         [HideInInspector] public int currentRedLightsGroup = 1;
 
+        private float lastSwitchTime; // Tracks the last state change time
+
         int num = 0;
 
         void Start()
@@ -38,7 +40,10 @@ namespace TrafficSimulation
             vehiclesInIntersection = new List<GameObject>();
 
             if (intersectionType == IntersectionType.TRAFFIC_LIGHT)
+            {
+                lastSwitchTime = Time.time;
                 InvokeRepeating("SwitchLights", lightsDuration, lightsDuration);
+            }
         }
         
         bool IsVehicleToTheRight(Transform straightVehicle, Transform rightTurningVehicle)
@@ -572,8 +577,16 @@ namespace TrafficSimulation
             if (currentRedLightsGroup == 1) currentRedLightsGroup = 2;
             else if (currentRedLightsGroup == 2) currentRedLightsGroup = 1;
 
+            lastSwitchTime = Time.time;
+
             // Wait for orange light duration before checking queued vehicles
             Invoke("CheckQueuedVehiclesTrafficLight", orangeLightDuration);
+        }
+
+        public float GetElapsedTime()
+        {
+            // Return the time elapsed since the last switch
+            return Time.time - lastSwitchTime;
         }
 
         bool IsRedLightSegment(int _vehicleSegment)

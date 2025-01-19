@@ -13,6 +13,8 @@ public class ColyseusClientCode : MonoBehaviour
     private static MenuManager _menuManager = null;
     private static ColyseusRoom<MyRoomState> _room = null;
 
+    public Intersection intersection;
+
     public Vector2 playerPosition;
     public GameObject playerPrefab;
     public List<GameObject> carObjects = new List<GameObject>(); // List of car GameObjects to track
@@ -87,6 +89,7 @@ public class ColyseusClientCode : MonoBehaviour
             if (message.id != GameRoom.SessionId)
             {
                 InstantiatePlayer(message.id);
+                //Debug.Log(intersection.GetElapsedTime());
             }
         });
 
@@ -140,6 +143,7 @@ public class ColyseusClientCode : MonoBehaviour
                 InstantiatePlayer(message.id);
                 playerInstance = playerInstances[message.id];
                 playerInstance.name = message.id;
+                GameRoom.Send("lights", new { id = intersection.GetElapsedTime() });
             }
         }
 
