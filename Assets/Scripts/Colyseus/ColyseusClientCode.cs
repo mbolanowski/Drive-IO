@@ -18,6 +18,7 @@ public class ColyseusClientCode : MonoBehaviour
     public PlayerManager pm;
     public VehicleControllerWithGears vc;
     public VechicleManager vm;
+    public WarningSystemController wsc;
 
     // Dictionaries to store instances and interpolation data
     private Dictionary<string, GameObject> playerInstances = new Dictionary<string, GameObject>();
@@ -97,6 +98,10 @@ public class ColyseusClientCode : MonoBehaviour
             {
                 if (message.id == myPlayerId)
                 {
+                    pm.AddIncident();
+                    pm.AddIncident();
+                    wsc.SetInfoText("You had no right of way");
+                    wsc.SetPenaltyText("-2 Life");
                     Debug.Log("Wykroczenie");
                 }
             });
