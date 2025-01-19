@@ -10,11 +10,6 @@ public class EntranceDirection : MonoBehaviour
     public bool horizontal;
     private void OnTriggerEnter(Collider other)
     {
-        if (other.tag == "AutonomousVehicle")
-        {
-            other.GetComponent<VehicleAI>().intersectionEntranceDirection = direction;
-            other.GetComponent<VehicleAI>().hasPriority = priority;
-        }
         if (other.gameObject.layer == LayerMask.NameToLayer("Player"))
         {
             other.GetComponent<VehicleControllerWithGears>().intersectionEntranceDirection = direction;

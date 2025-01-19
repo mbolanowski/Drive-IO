@@ -81,7 +81,7 @@ public class ColyseusClientCode : MonoBehaviour
             _room.OnMessage<CarPositionMessage>("car_position", message =>
             {
                 UpdateCarPosition(message);
-                Debug.Log(message.carID);
+                //Debug.Log(message.carID);
             });
 
             // Handle player joining
@@ -90,6 +90,14 @@ public class ColyseusClientCode : MonoBehaviour
                 if (message.id != GameRoom.SessionId)
                 {
                     InstantiatePlayer(message.id);
+                }
+            });
+
+            _room.OnMessage<PlayerJoinMessage>("intersection", message =>
+            {
+                if (message.id == myPlayerId)
+                {
+                    Debug.Log("Wykroczenie");
                 }
             });
 
@@ -135,27 +143,35 @@ public class ColyseusClientCode : MonoBehaviour
     {
         if (string.IsNullOrEmpty(message.carID))
         {
-            Debug.LogError("Received CarPositionMessage with a null or empty carID.");
+            //Debug.LogError("Received CarPositionMessage with a null or empty carID.");
             return;
         }
 
-        // Check if we have a car with this specific ID (e.g., "C0", "C1", etc.)
-        if (carInstances.ContainsKey(message.carID))
+        if (_room != null)
         {
-            GameObject carToUpdate = carInstances[message.carID];
-            if (carToUpdate != null)
+            // Check if we have a car with this specific ID (e.g., "C0", "C1", etc.)
+            if (carInstances.ContainsKey(message.carID))
             {
-                UpdateObjectPosition(carToUpdate, message.carID, new Vector3(message.x, 0, message.z), message.rotationY);
-                Debug.Log($"Updated car {message.carID} position to: {message.x}, {message.z}");
+                GameObject carToUpdate = carInstances[message.carID];
+                if (carToUpdate != null)
+                {
+
+
+                    UpdateObjectPosition(carToUpdate, message.carID, new Vector3(message.x, 0, message.z), message.rotationY);
+                    carToUpdate.GetComponent<AISimpleController>().rightBlinker = message.rightBlinker;
+                    carToUpdate.GetComponent<AISimpleController>().leftBlinker = message.leftBlinker;
+
+                    //Debug.Log($"Updated car {message.carID} position to: {message.x}, {message.z}");
+                }
+                else
+                {
+                    //Debug.LogWarning($"Car with ID {message.carID} exists in dictionary but GameObject is null");
+                }
             }
             else
             {
-                Debug.LogWarning($"Car with ID {message.carID} exists in dictionary but GameObject is null");
+                // Debug.LogWarning($"Received position update for unknown car ID: {message.carID}");
             }
-        }
-        else
-        {
-            Debug.LogWarning($"Received position update for unknown car ID: {message.carID}");
         }
     }
 
@@ -320,6 +336,14 @@ public class ColyseusClientCode : MonoBehaviour
         // Reset interpolation time
         data.interpolationTime = 0f;
     }
+
+    public void notifyViolation()
+    {
+        if (GameRoom != null)
+        {
+            _ = GameRoom.Send("position", new { id = myPlayerId});
+        }
+    }
 }
 
 // Class to store interpolation data for smooth movement
@@ -357,6 +381,8 @@ public class CarPositionMessage
     public float x;
     public float z;
     public float rotationY;
+    public bool rightBlinker;
+    public bool leftBlinker;
 }
 
 [System.Serializable]
