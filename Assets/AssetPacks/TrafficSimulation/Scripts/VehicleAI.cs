@@ -91,8 +91,8 @@ namespace TrafficSimulation {
         // Variables to handle blinking state
         private Coroutine leftBlinkerCoroutine;
         private Coroutine rightBlinkerCoroutine;
-        private bool isLeftBlinkerOn = false;
-        private bool isRightBlinkerOn = false;
+        public bool isLeftBlinkerOn = false;
+        public bool isRightBlinkerOn = false;
 
         public int placeInQueue = 5;
 

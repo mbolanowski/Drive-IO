@@ -4,6 +4,8 @@ using Colyseus;
 using UnityEngine;
 using System.Linq;
 using System;
+using System.Threading;
+using TrafficSimulation;
 
 public class ColyseusClientCode : MonoBehaviour
 {
@@ -124,6 +126,7 @@ public class ColyseusClientCode : MonoBehaviour
             cnt.rightBlinker = message.rightBlinker;
             cnt.leftBlinker = message.leftBlinker;
             cnt.speed = message.speed;
+            cnt.intersectionEntranceDirection = message.entrance;
             UpdateObjectPosition(playerInstance, message.id, new Vector3(message.x, 0, message.z), message.rotationY);
         }
     }
@@ -210,13 +213,17 @@ public class ColyseusClientCode : MonoBehaviour
             {
                 string carId = carPair.Key;
                 GameObject car = carPair.Value;
+                VehicleAI va = car.GetComponent<VehicleAI>();
 
                 var positionData = new
                 {
                     carID = carId,
                     x = car.transform.position.x,
                     z = car.transform.position.z,
-                    rotationY = car.transform.rotation.eulerAngles.y
+                    rotationY = car.transform.rotation.eulerAngles.y,
+                    rightBlinker = va.isRightBlinkerOn,
+                    leftBlinker = va.isLeftBlinkerOn
+
                 };
 
                 _ = GameRoom.Send("car_position", positionData);
@@ -335,6 +342,7 @@ public class PlayerPositionMessage
     public bool isHorizontal;
     public bool hasPriority;
     public float speed;
+    public int entrance;
 }
 
 [System.Serializable]
@@ -344,6 +352,8 @@ public class CarPositionMessage
     public float x;
     public float z;
     public float rotationY;
+    public bool rightBlinker;
+    public bool leftBlinker;
 }
 
 [System.Serializable]
