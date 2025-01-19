@@ -115,6 +115,7 @@ public class ColyseusClientCode : MonoBehaviour
             {
                 InstantiatePlayer(message.id);
                 playerInstance = playerInstances[message.id];
+                playerInstance.name = message.id;
             }
         }
 
@@ -316,6 +317,15 @@ public class ColyseusClientCode : MonoBehaviour
         // Reset interpolation time
         data.interpolationTime = 0f;
     }
+
+    public void notifyViolation(string ids)
+    {
+        if (GameRoom != null)
+        {
+            _ = GameRoom.Send("intersection", new { id = ids });
+        }
+    }
+
 }
 
 // Class to store interpolation data for smooth movement

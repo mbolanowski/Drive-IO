@@ -78,6 +78,8 @@ namespace TrafficSimulation {
 
         [SerializeField] public Status vehicleStatus = Status.GO;
 
+        public ColyseusClientCode client;
+
         private WheelDrive wheelDrive;
         private CarsController cc;
         private WarningSystemController wsc;
@@ -118,6 +120,11 @@ namespace TrafficSimulation {
             if (wsc == null)
             {
                 wsc = GameObject.Find("Warning System").GetComponent<WarningSystemController>();
+            }
+
+            if (client == null)
+            {
+                client = GameObject.Find("Colyseus").GetComponent<ColyseusClientCode>();
             }
 
 
@@ -461,6 +468,7 @@ namespace TrafficSimulation {
                                                 {
                                                     //pm.AddIncident();
                                                     //pm.AddIncident();
+                                                    client.notifyViolation(obstacle.name);
                                                     wsc.SetInfoText("Wymusiles pierwszenstwo");
                                                     wsc.SetPenaltyText("-2 Life");
                                                     Debug.Log("Wymuszenie pierwszeñstwa.1" + this.name);
@@ -490,6 +498,7 @@ namespace TrafficSimulation {
                                                     {
                                                         //pm.AddIncident();
                                                         //pm.AddIncident();
+                                                        client.notifyViolation(obstacle.name);
                                                         wsc.SetInfoText("Wymusiles pierwszenstwo");
                                                         wsc.SetPenaltyText("-2 Life");
                                                         Debug.Log("Wymuszenie pierwszeñstwa.2 " + this.name);
@@ -518,6 +527,7 @@ namespace TrafficSimulation {
                                                 {
                                                     //pm.AddIncident();
                                                     //pm.AddIncident();
+                                                    client.notifyViolation(obstacle.name);
                                                     wsc.SetInfoText("Wymusiles pierwszenstwo");
                                                     wsc.SetPenaltyText("-2 Life");
                                                     Debug.Log("Wymuszenie pierwszeñstwa.3" + this.name);
@@ -544,6 +554,7 @@ namespace TrafficSimulation {
                                             {
                                                 //pm.AddIncident();
                                                 //pm.AddIncident();
+                                                client.notifyViolation(obstacle.name);
                                                 wsc.SetInfoText("Wymusiles pierwszenstwo");
                                                 wsc.SetPenaltyText("-2 Life");
                                                 Debug.Log("Wymuszenie pierwszeñstwa.4" + this.name);
@@ -567,6 +578,7 @@ namespace TrafficSimulation {
                                             {
                                                 //pm.AddIncident();
                                                 //pm.AddIncident();
+                                                client.notifyViolation(obstacle.name);
                                                 wsc.SetInfoText("Wymusiles pierwszenstwo");
                                                 wsc.SetPenaltyText("-2 Life");
                                                 Debug.Log("Wymuszenie pierwszeñstwa.5" + this.name);
@@ -595,6 +607,7 @@ namespace TrafficSimulation {
                                                 {
                                                     //pm.AddIncident();
                                                     //pm.AddIncident();
+                                                    client.notifyViolation(obstacle.name);
                                                     wsc.SetInfoText("Wymusiles pierwszenstwo");
                                                     wsc.SetPenaltyText("-2 Life");
                                                     Debug.Log("Wymuszenie pierwszeñstwa.6" + this.name);
@@ -625,6 +638,7 @@ namespace TrafficSimulation {
                                                 {
                                                     //pm.AddIncident();
                                                     //pm.AddIncident();
+                                                    client.notifyViolation(obstacle.name);
                                                     wsc.SetInfoText("Wymusiles pierwszenstwo");
                                                     wsc.SetPenaltyText("-2 Life");
                                                     Debug.Log("Wymuszenie pierwszeñstwa.7" + this.name);
@@ -651,6 +665,7 @@ namespace TrafficSimulation {
                                             {
                                                 //pm.AddIncident();
                                                 //pm.AddIncident();
+                                                client.notifyViolation(obstacle.name);
                                                 wsc.SetInfoText("Wymusiles pierwszenstwo");
                                                 wsc.SetPenaltyText("-2 Life");
                                                 Debug.Log("Wymuszenie pierwszeñstwa.8" + this.name);
