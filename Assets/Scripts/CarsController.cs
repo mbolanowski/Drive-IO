@@ -10,6 +10,7 @@ public class CarsController : MonoBehaviour
     public bool isHorizontal = false;
     public string turning = "";
     public float speed;
+    public string actualID = string.Empty;
 
     public int intersectionEntranceDirection = 5;
 }

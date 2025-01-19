@@ -9495,18 +9495,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 346505497}
     m_Modifications:
-    - target: {fileID: 1034186902382927669, guid: 937dc63d103394f478f1bb9036775285, type: 3}
-      propertyPath: steeringLerp
-      value: 10
-      objectReference: {fileID: 0}
-    - target: {fileID: 1034186902382927669, guid: 937dc63d103394f478f1bb9036775285, type: 3}
-      propertyPath: maxSteeringAngle
-      value: 120
-      objectReference: {fileID: 0}
-    - target: {fileID: 1034186902382927669, guid: 937dc63d103394f478f1bb9036775285, type: 3}
-      propertyPath: steeringSpeedMax
-      value: 3.5
-      objectReference: {fileID: 0}
     - target: {fileID: 1756331217056727363, guid: 937dc63d103394f478f1bb9036775285, type: 3}
       propertyPath: m_LocalPosition.x
       value: 53.27
@@ -9550,62 +9538,6 @@ PrefabInstance:
     - target: {fileID: 4574175864208166234, guid: 937dc63d103394f478f1bb9036775285, type: 3}
       propertyPath: m_Name
       value: Car Coupe (8)
-      objectReference: {fileID: 0}
-    - target: {fileID: 4574175864208166234, guid: 937dc63d103394f478f1bb9036775285, type: 3}
-      propertyPath: m_IsActive
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6835514021579986544, guid: 937dc63d103394f478f1bb9036775285, type: 3}
-      propertyPath: raySpacingAI
-      value: 12
-      objectReference: {fileID: 0}
-    - target: {fileID: 6835514021579986544, guid: 937dc63d103394f478f1bb9036775285, type: 3}
-      propertyPath: raysNumberAI
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 6835514021579986544, guid: 937dc63d103394f478f1bb9036775285, type: 3}
-      propertyPath: distanceTresh
-      value: 0.7
-      objectReference: {fileID: 0}
-    - target: {fileID: 6835514021579986544, guid: 937dc63d103394f478f1bb9036775285, type: 3}
-      propertyPath: raycastLength
-      value: 2.2
-      objectReference: {fileID: 0}
-    - target: {fileID: 6835514021579986544, guid: 937dc63d103394f478f1bb9036775285, type: 3}
-      propertyPath: trafficSystem
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 6835514021579986544, guid: 937dc63d103394f478f1bb9036775285, type: 3}
-      propertyPath: slowDownThresh
-      value: 1.7
-      objectReference: {fileID: 0}
-    - target: {fileID: 6835514021579986544, guid: 937dc63d103394f478f1bb9036775285, type: 3}
-      propertyPath: waypointThresh
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6835514021579986544, guid: 937dc63d103394f478f1bb9036775285, type: 3}
-      propertyPath: raycastLengthAI
-      value: 2.2
-      objectReference: {fileID: 0}
-    - target: {fileID: 6835514021579986544, guid: 937dc63d103394f478f1bb9036775285, type: 3}
-      propertyPath: raySpacingPlayer
-      value: 9
-      objectReference: {fileID: 0}
-    - target: {fileID: 6835514021579986544, guid: 937dc63d103394f478f1bb9036775285, type: 3}
-      propertyPath: raysNumberPlayer
-      value: 20
-      objectReference: {fileID: 0}
-    - target: {fileID: 6835514021579986544, guid: 937dc63d103394f478f1bb9036775285, type: 3}
-      propertyPath: intersectionBrake
-      value: 0.74
-      objectReference: {fileID: 0}
-    - target: {fileID: 6835514021579986544, guid: 937dc63d103394f478f1bb9036775285, type: 3}
-      propertyPath: raycastLengthPlayer
-      value: 3.6
-      objectReference: {fileID: 0}
-    - target: {fileID: 6835514021579986544, guid: 937dc63d103394f478f1bb9036775285, type: 3}
-      propertyPath: emergencyBrakeThresh
-      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -14329,6 +14261,7 @@ MonoBehaviour:
   - {fileID: 2006846664}
   - {fileID: 250166285}
   - {fileID: 60479640}
+  lastJoined: 
 --- !u!4 &1046752193
 Transform:
   m_ObjectHideFlags: 0

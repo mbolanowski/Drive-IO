@@ -108,6 +108,9 @@ namespace TrafficSimulation {
         public bool _TurningRight = false;
         public bool _TurningStraight = false;
 
+        private readonly float blinkInterval = 0.5f;
+        private bool isBlinking = false;
+
         void Start()
         {
             wheelDrive = this.GetComponent<WheelDrive>();
@@ -809,11 +812,11 @@ namespace TrafficSimulation {
             {
                 _outObstacle = hit.collider.gameObject;
                 _outHitDistance = hit.distance;
-                Debug.DrawRay(_anchor, Quaternion.Euler(0, _angle, 0) * _dir * _length, new Color(0, 1, 0, 0.5f));
+                //Debug.DrawRay(_anchor, Quaternion.Euler(0, _angle, 0) * _dir * _length, new Color(0, 1, 0, 0.5f));
             }
             else
             {
-                Debug.DrawRay(_anchor, Quaternion.Euler(0, _angle, 0) * _dir * _length, new Color(1, 0, 0, 0.5f));
+                //Debug.DrawRay(_anchor, Quaternion.Euler(0, _angle, 0) * _dir * _length, new Color(1, 0, 0, 0.5f));
             }
         }
 
@@ -882,61 +885,74 @@ namespace TrafficSimulation {
 
         void HandleBlinkers()
         {
-
-            //Calculate if there is a planned turn
             Transform targetTransform = trafficSystem.segments[currentTarget.segment].waypoints[currentTarget.waypoint].transform;
             Transform futureTargetTransform = trafficSystem.segments[futureTarget.segment].waypoints[futureTarget.waypoint].transform;
-            //Debug.Log(trafficSystem.segments[futureTarget.segment].waypoints[futureTarget.waypoint].name);
 
-            // Distance to the current waypoint
             float distanceToWaypoint = Vector3.Distance(this.transform.position, targetTransform.position);
 
             if (distanceToWaypoint < distanceTresh * 5)
             {
-                // Left Arrow blinker
-                if (futureSteering < -0.6f && !isLeftBlinkerOn)
+                // Start left blinker
+                if (futureSteering < -0.6f)
                 {
-                    if (leftBlinkerCoroutine != null) StopCoroutine(leftBlinkerCoroutine); // Stop previous coroutine if running
-                    isLeftBlinkerOn = true;
-                    leftBlinkerCoroutine = StartCoroutine(BlinkerCoroutine(leftBlinker));
+                    if (!isLeftBlinkerOn)
+                    {
+                        StopAllBlinkers();
+                        isLeftBlinkerOn = true;
+                        leftBlinkerCoroutine = StartCoroutine(BlinkerCoroutine(leftBlinker));
+                    }
                 }
-
-                else if (futureSteering > 0.6f && !isRightBlinkerOn)
+                // Start right blinker
+                else if (futureSteering > 0.6f)
                 {
-                    if (rightBlinkerCoroutine != null) StopCoroutine(rightBlinkerCoroutine); // Stop previous coroutine if running
-                    isRightBlinkerOn = true;
-                    rightBlinkerCoroutine = StartCoroutine(BlinkerCoroutine(rightBlinker));
-
+                    if (!isRightBlinkerOn)
+                    {
+                        StopAllBlinkers();
+                        isRightBlinkerOn = true;
+                        rightBlinkerCoroutine = StartCoroutine(BlinkerCoroutine(rightBlinker));
+                    }
                 }
             }
             else
             {
-                isLeftBlinkerOn = false;
-                isRightBlinkerOn = false;
-                if (rightBlinkerCoroutine != null)
-                {
-                    StopCoroutine(rightBlinkerCoroutine);
-                    SetBlinker(rightBlinker, false);
-                }
-                if (leftBlinkerCoroutine != null)
-                {
-                    StopCoroutine(leftBlinkerCoroutine);
-                    SetBlinker(leftBlinker, false);
-                }
-            }
-        }
-        IEnumerator BlinkerCoroutine(GameObject blinker)
-        {
-            while (true)
-            {
-                SetBlinker(blinker, true);   // Turn on blinker
-                yield return new WaitForSeconds(0.5f); // Wait for 0.5 seconds
-                SetBlinker(blinker, false);  // Turn off blinker
-                yield return new WaitForSeconds(0.5f); // Wait for 0.5 seconds
+                StopAllBlinkers();
             }
         }
 
-        // Helper method to enable/disable blinker object
+        private void StopAllBlinkers()
+        {
+            // Stop left blinker
+            if (leftBlinkerCoroutine != null)
+            {
+                StopCoroutine(leftBlinkerCoroutine);
+                leftBlinkerCoroutine = null;
+                SetBlinker(leftBlinker, false);
+                isLeftBlinkerOn = false;
+            }
+
+            // Stop right blinker
+            if (rightBlinkerCoroutine != null)
+            {
+                StopCoroutine(rightBlinkerCoroutine);
+                rightBlinkerCoroutine = null;
+                SetBlinker(rightBlinker, false);
+                isRightBlinkerOn = false;
+            }
+        }
+
+
+        IEnumerator BlinkerCoroutine(GameObject blinker)
+        {
+            isBlinking = true;
+            while (isBlinking)
+            {
+                SetBlinker(blinker, true);
+                yield return new WaitForSeconds(blinkInterval);
+                SetBlinker(blinker, false);
+                yield return new WaitForSeconds(blinkInterval);
+            }
+        }
+
         void SetBlinker(GameObject blinker, bool isActive)
         {
             if (blinker != null)

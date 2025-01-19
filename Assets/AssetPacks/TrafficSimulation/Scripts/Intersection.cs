@@ -63,11 +63,11 @@ namespace TrafficSimulation
             VehicleAI ai2 = vehicle2.GetComponent<VehicleAI>();
 
             // If one is going straight and other is turning right
-            if (ai1._TurningStraight && ai2._TurningRight)
+            if (ai1._TurningStraight && ai2._TurningRight && ((ai1.hasPriority && ai2.hasPriority) || (!ai1.hasPriority && !ai2.hasPriority)))
             {
                 return IsVehicleToTheRight(vehicle1.transform, vehicle2.transform);
             }
-            else if (ai2._TurningStraight && ai1._TurningRight)
+            else if (ai2._TurningStraight && ai1._TurningRight && ((ai1.hasPriority && ai2.hasPriority) || (!ai1.hasPriority && !ai2.hasPriority)))
             {
                 return ai2.vehicleStatus != Status.STOP && IsVehicleToTheRight(vehicle2.transform, vehicle1.transform);
             }

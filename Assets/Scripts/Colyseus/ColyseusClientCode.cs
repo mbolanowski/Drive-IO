@@ -30,6 +30,8 @@ public class ColyseusClientCode : MonoBehaviour
     private float nextNetworkTick = 0f;
     private const float PREDICTION_THRESHOLD = 0.5f; // Maximum prediction time in seconds
 
+    public string lastJoined = "";
+
     private bool isConnected = false;
 
     private async void Start()
@@ -78,12 +80,34 @@ public class ColyseusClientCode : MonoBehaviour
             //Debug.Log(message.carID);
         });
 
+
         // Handle player joining
         _room.OnMessage<PlayerJoinMessage>("player_join", message =>
         {
             if (message.id != GameRoom.SessionId)
             {
                 InstantiatePlayer(message.id);
+            }
+        });
+
+        _room.OnMessage<PlayerJoinMessage>("join", message =>
+        {
+            lastJoined = message.id;
+        });
+
+        _room.OnMessage<PlayerJoinMessage>("left", message =>
+        {
+            foreach (var kvp in playerInstances)
+            {
+                CarsController cnt = kvp.Value.GetComponent<CarsController>();
+                if (cnt != null && cnt.actualID == message.id)
+                {
+                    // Found the player instance; handle the removal
+                    Destroy(kvp.Value); // Destroy the GameObject
+                    playerInstances.Remove(kvp.Key); // Remove from the dictionary
+                    Debug.Log($"Player with ID {message.id} has left and been removed.");
+                    break; // Exit the loop after handling
+                }
             }
         });
 
@@ -129,6 +153,12 @@ public class ColyseusClientCode : MonoBehaviour
             cnt.speed = message.speed;
             cnt.intersectionEntranceDirection = message.entrance;
             cnt.turning = message.turning;
+
+            if(cnt.actualID == String.Empty)
+            {
+                cnt.actualID = lastJoined;
+            }
+
             UpdateObjectPosition(playerInstance, message.id, new Vector3(message.x, 0, message.z), message.rotationY);
         }
     }
