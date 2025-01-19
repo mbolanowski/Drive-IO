@@ -23,7 +23,7 @@ public class ColyseusClientCode : MonoBehaviour
     private Dictionary<string, InterpolationData> interpolationData = new Dictionary<string, InterpolationData>();
 
     // Networking settings
-    private float lerpDuration = 0.01f;
+    private float lerpDuration = 0.1f;
     private float networkTickRate = 0.05f; // 20 updates per second
     private float nextNetworkTick = 0f;
     private const float PREDICTION_THRESHOLD = 0.5f; // Maximum prediction time in seconds
@@ -185,8 +185,8 @@ public class ColyseusClientCode : MonoBehaviour
         // Update player position
         if (_room != null)
         {
-            playerPosition = new Vector2(transform.position.x, transform.position.z);
-            float rotationY = transform.rotation.eulerAngles.y;
+            //playerPosition = new Vector2(transform.position.x, transform.position.z);
+            //float rotationY = transform.rotation.eulerAngles.y;
             //PlayerPosition(playerPosition, rotationY);
         }
 
@@ -235,15 +235,16 @@ public class ColyseusClientCode : MonoBehaviour
             if (data.interpolationTime <= lerpDuration)
             {
                 float t = data.interpolationTime / lerpDuration;
-
-                // Use smoothstep for more natural movement
                 t = t * t * (3f - 2f * t);
 
-                // Lerp to the target position most of the time, only use prediction for fast movements
                 Vector3 targetPos = Vector3.Distance(data.previousPosition, data.targetPosition) > 1f ?
                     data.predictedPosition : data.targetPosition;
 
-                data.currentObject.transform.position = Vector3.Lerp(data.previousPosition, targetPos, t);
+                Vector3 newPosition = Vector3.Lerp(data.previousPosition, targetPos, t);
+                data.currentObject.transform.position = newPosition;  // Actually move the object
+
+                Debug.Log($"Object {kvp.Key} - Previous: {data.previousPosition}, Target: {targetPos}, New: {newPosition}, t: {t}");
+
                 data.currentObject.transform.rotation = Quaternion.Lerp(data.previousRotation, data.targetRotation, t);
                 data.interpolationTime += Time.deltaTime;
             }

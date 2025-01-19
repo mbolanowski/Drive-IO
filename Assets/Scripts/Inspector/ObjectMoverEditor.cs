@@ -1,7 +1,7 @@
 using UnityEditor;
 using UnityEngine;
 
-[CustomEditor(typeof(ObjectMover))]
+/*//[CustomEditor(typeof(ObjectMover))]
 public class ObjectMoverEditor : Editor
 {
     public override void OnInspectorGUI()
@@ -33,4 +33,4 @@ public class ObjectMoverEditor : Editor
             mover.MoveDown();
         }
     }
-}
+}*/
