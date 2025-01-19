@@ -79,9 +79,7 @@ namespace TrafficSimulation {
         [SerializeField] public Status vehicleStatus = Status.GO;
 
         private WheelDrive wheelDrive;
-        private CarsManager cm;
-        private VechicleManager vm;
-        private PlayerManager pm;
+        private CarsController cc;
         private WarningSystemController wsc;
         private float initMaxSpeed = 0;
         private int pastTargetSegment = -1;
@@ -111,10 +109,6 @@ namespace TrafficSimulation {
         void Start()
         {
             wheelDrive = this.GetComponent<WheelDrive>();
-
-            cm = transform.parent.GetComponent<CarsManager>();
-            vm = cm.vm;
-            pm = cm.pm;
 
             if (trafficSystem == null)
             {
@@ -397,18 +391,21 @@ namespace TrafficSimulation {
                     {
                         float dotFront = Vector3.Dot(this.transform.forward, obstacle.transform.forward);
 
+                        cc = obstacle.GetComponent<CarsController>();
+
                         int thisTurn = 0;
                         if (this.GetComponent<VehicleAI>().futureSteering > 0.3f) thisTurn = 0;
                         else if (this.GetComponent<VehicleAI>().futureSteering < -0.3f) thisTurn = 1;
                         else thisTurn = 2;
 
                         string otherTurn = "";
-                        otherTurn = vm._declaredDirection;
+                        otherTurn = cc.turning;
+                        float maxSpeed = 7f;
                         
 
-                        if (vm.GetMaxSpeed() * 5f < wheelDrive.maxSpeed && dotFront > .8f)
+                        if (maxSpeed * 5f < wheelDrive.maxSpeed && dotFront > .8f)
                         {
-                            float ms = Mathf.Max(wheelDrive.GetSpeedMS(vm.GetMaxSpeed()) - .5f, .1f);
+                            float ms = Mathf.Max(wheelDrive.GetSpeedMS(maxSpeed) - .5f, .1f);
                             wheelDrive.maxSpeed = wheelDrive.GetSpeedUnit(ms);
                         }
 
@@ -432,12 +429,12 @@ namespace TrafficSimulation {
                         }
 
 
-                        VehicleControllerWithGears vsc = obstacle.GetComponent<VehicleControllerWithGears>();
-                        Vector3 directionToOther = transform.position - vsc.transform.position;
-                        float dotProduct = Vector3.Dot(vsc.transform.right, directionToOther.normalized);
+                        //VehicleControllerWithGears vsc = obstacle.GetComponent<VehicleControllerWithGears>();
+                        Vector3 directionToOther = transform.position - obstacle.transform.position;
+                        float dotProduct = Vector3.Dot(obstacle.transform.right, directionToOther.normalized);
                         float value = 1.0f;
 
-                        if (this.GetComponent<VehicleAI>().vehicleStatus == Status.SLOW_DOWN && (this.GetComponent<VehicleAI>().intersectionEntranceDirection != vsc.intersectionEntranceDirection))
+                        if (this.GetComponent<VehicleAI>().vehicleStatus == Status.SLOW_DOWN && (this.GetComponent<VehicleAI>().intersectionEntranceDirection != cc.intersectionEntranceDirection))
                         {
                             if (thisTurn == 0 && otherTurn == "right")
                             {
@@ -445,13 +442,13 @@ namespace TrafficSimulation {
                             }
                             else if (thisTurn == 0 && otherTurn == "straight")
                             {
-                                if (vsc._isHorizontal == _isHorizontal)
+                                if (cc.isHorizontal == _isHorizontal)
                                 {
 
                                 }
                                 else
                                 {
-                                    if (vsc.currentSpeed > 0.6f)
+                                    if (cc.speed > 0.6f)
                                     {
                                         if (dotProduct > -value && dotProduct < value)
                                         {
@@ -460,10 +457,10 @@ namespace TrafficSimulation {
                                             timeSinceLastCheck += Time.deltaTime;
                                             if (timeSinceLastCheck >= 5f)
                                             {
-                                                if (!pm._hasRightOfWay && hasPriority)
+                                                if (!cc.hasPriority && hasPriority)
                                                 {
-                                                    pm.AddIncident();
-                                                    pm.AddIncident();
+                                                    //pm.AddIncident();
+                                                    //pm.AddIncident();
                                                     wsc.SetInfoText("Wymusiles pierwszenstwo");
                                                     wsc.SetPenaltyText("-2 Life");
                                                     Debug.Log("Wymuszenie pierwszeñstwa.1" + this.name);
@@ -476,9 +473,9 @@ namespace TrafficSimulation {
                             }
                             else if (thisTurn == 0 && otherTurn == "left")
                             {
-                                if (vsc._isHorizontal == _isHorizontal)
+                                if (cc.isHorizontal == _isHorizontal)
                                 {
-                                    if (vsc.currentSpeed > 0.6f)
+                                    if (cc.speed > 0.6f)
                                     {
                                         if (dotProduct > -value && dotProduct < value)
                                         {
@@ -487,12 +484,12 @@ namespace TrafficSimulation {
                                             timeSinceLastCheck += Time.deltaTime;
                                             if (timeSinceLastCheck >= 5f)
                                             {
-                                                if ((pm._hasRightOfWay == hasPriority) || (!pm._hasRightOfWay && hasPriority))
+                                                if ((cc.hasPriority == hasPriority) || (!cc.hasPriority && hasPriority))
                                                 {
                                                     if (dotProduct > 0.3f)
                                                     {
-                                                        pm.AddIncident();
-                                                        pm.AddIncident();
+                                                        //pm.AddIncident();
+                                                        //pm.AddIncident();
                                                         wsc.SetInfoText("Wymusiles pierwszenstwo");
                                                         wsc.SetPenaltyText("-2 Life");
                                                         Debug.Log("Wymuszenie pierwszeñstwa.2 " + this.name);
@@ -507,9 +504,9 @@ namespace TrafficSimulation {
                             }
                             else if (thisTurn == 1 && otherTurn == "right")
                             {
-                                if (vsc._isHorizontal == _isHorizontal)
+                                if (cc.isHorizontal == _isHorizontal)
                                 {
-                                    if (vsc.currentSpeed > 0.6f)
+                                    if (cc.speed > 0.6f)
                                     {
                                         if (dotProduct > -value && dotProduct < value)
                                         {
@@ -517,10 +514,10 @@ namespace TrafficSimulation {
                                             brake = 1;
                                             if (timeSinceLastCheck >= 5f)
                                             {
-                                                if (!pm._hasRightOfWay && hasPriority)
+                                                if (!cc.hasPriority && hasPriority)
                                                 {
-                                                    pm.AddIncident();
-                                                    pm.AddIncident();
+                                                    //pm.AddIncident();
+                                                    //pm.AddIncident();
                                                     wsc.SetInfoText("Wymusiles pierwszenstwo");
                                                     wsc.SetPenaltyText("-2 Life");
                                                     Debug.Log("Wymuszenie pierwszeñstwa.3" + this.name);
@@ -533,7 +530,7 @@ namespace TrafficSimulation {
                             }
                             else if (thisTurn == 1 && otherTurn == "straight")
                             {
-                                if (vsc.currentSpeed > 0.6f)
+                                if (cc.speed > 0.6f)
                                 {
                                     //Debug.Log("giga test222");
                                     if (dotProduct > -value && dotProduct < value)
@@ -543,10 +540,10 @@ namespace TrafficSimulation {
                                         brake = 1;
                                         if (timeSinceLastCheck >= 5f)
                                         {
-                                            if (!pm._hasRightOfWay && hasPriority)
+                                            if (!cc.hasPriority && hasPriority)
                                             {
-                                                pm.AddIncident();
-                                                pm.AddIncident();
+                                                //pm.AddIncident();
+                                                //pm.AddIncident();
                                                 wsc.SetInfoText("Wymusiles pierwszenstwo");
                                                 wsc.SetPenaltyText("-2 Life");
                                                 Debug.Log("Wymuszenie pierwszeñstwa.4" + this.name);
@@ -558,7 +555,7 @@ namespace TrafficSimulation {
                             }
                             else if (thisTurn == 1 && otherTurn == "left")
                             {
-                                if (vsc.currentSpeed > 0.6f)
+                                if (cc.speed > 0.6f)
                                 {
                                     if (dotProduct > -value && dotProduct < value)
                                     {
@@ -566,10 +563,10 @@ namespace TrafficSimulation {
                                         brake = 1;
                                         if (timeSinceLastCheck >= 5f)
                                         {
-                                            if (!pm._hasRightOfWay && hasPriority)
+                                            if (!cc.hasPriority && hasPriority)
                                             {
-                                                pm.AddIncident();
-                                                pm.AddIncident();
+                                                //pm.AddIncident();
+                                                //pm.AddIncident();
                                                 wsc.SetInfoText("Wymusiles pierwszenstwo");
                                                 wsc.SetPenaltyText("-2 Life");
                                                 Debug.Log("Wymuszenie pierwszeñstwa.5" + this.name);
@@ -581,23 +578,23 @@ namespace TrafficSimulation {
                             }
                             else if (thisTurn == 2 && otherTurn == "right")
                             {
-                                if (vsc._isHorizontal == _isHorizontal)
+                                if (cc.isHorizontal == _isHorizontal)
                                 {
                                 }
                                 else // if on the right yield, if on the left its okay
                                 {
                                     if (dotProduct < 0)
                                     {
-                                        if (vsc.currentSpeed > 0.4f)
+                                        if (cc.speed > 0.4f)
                                         {
                                             acc = 0;
                                             brake = 1;
                                             if (timeSinceLastCheck >= 5f)
                                             {
-                                                if (!pm._hasRightOfWay && hasPriority)
+                                                if (!cc.hasPriority && hasPriority)
                                                 {
-                                                    pm.AddIncident();
-                                                    pm.AddIncident();
+                                                    //pm.AddIncident();
+                                                    //pm.AddIncident();
                                                     wsc.SetInfoText("Wymusiles pierwszenstwo");
                                                     wsc.SetPenaltyText("-2 Life");
                                                     Debug.Log("Wymuszenie pierwszeñstwa.6" + this.name);
@@ -610,13 +607,13 @@ namespace TrafficSimulation {
                             }
                             else if (thisTurn == 2 && otherTurn == "straight")
                             {
-                                if (vsc._isHorizontal == _isHorizontal)
+                                if (cc.isHorizontal == _isHorizontal)
                                 {
 
                                 }
                                 else // if on the right yield, if on the left its okay
                                 {
-                                    if (vsc.currentSpeed > 0.6f)
+                                    if (cc.speed > 0.6f)
                                     {
                                         if (dotProduct > -value && dotProduct < value)
                                         {
@@ -624,10 +621,10 @@ namespace TrafficSimulation {
                                             brake = 1;
                                             if (timeSinceLastCheck >= 5f)
                                             {
-                                                if (!pm._hasRightOfWay && hasPriority)
+                                                if (!cc.hasPriority && hasPriority)
                                                 {
-                                                    pm.AddIncident();
-                                                    pm.AddIncident();
+                                                    //pm.AddIncident();
+                                                    //pm.AddIncident();
                                                     wsc.SetInfoText("Wymusiles pierwszenstwo");
                                                     wsc.SetPenaltyText("-2 Life");
                                                     Debug.Log("Wymuszenie pierwszeñstwa.7" + this.name);
@@ -640,7 +637,7 @@ namespace TrafficSimulation {
                             }
                             else if (thisTurn == 2 && otherTurn == "left")
                             {
-                                if (vsc.currentSpeed > 0.6f)
+                                if (cc.speed > 0.6f)
                                 {
                                     //Debug.Log("oh yea its real");
                                     if (dotProduct > -value && dotProduct < value)
@@ -650,10 +647,10 @@ namespace TrafficSimulation {
                                         timeSinceLastCheck += Time.deltaTime;
                                         if (timeSinceLastCheck >= 5f)
                                         {
-                                            if ((pm._hasRightOfWay == hasPriority) || (!pm._hasRightOfWay && hasPriority))
+                                            if ((cc.hasPriority == hasPriority) || (!cc.hasPriority && hasPriority))
                                             {
-                                                pm.AddIncident();
-                                                pm.AddIncident();
+                                                //pm.AddIncident();
+                                                //pm.AddIncident();
                                                 wsc.SetInfoText("Wymusiles pierwszenstwo");
                                                 wsc.SetPenaltyText("-2 Life");
                                                 Debug.Log("Wymuszenie pierwszeñstwa.8" + this.name);

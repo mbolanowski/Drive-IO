@@ -16,8 +16,6 @@ public class EntranceDirection : MonoBehaviour
         }
         if (other.gameObject.layer == LayerMask.NameToLayer("Player"))
         {
-            other.GetComponent<VehicleControllerWithGears>().intersectionEntranceDirection = direction;
-            GameObject.Find("PlayerManager").GetComponent<PlayerManager>()._hasRightOfWay = priority;
         }
     }
 }

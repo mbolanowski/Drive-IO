@@ -123,6 +123,7 @@ public class ColyseusClientCode : MonoBehaviour
             cnt.isHorizontal = message.isHorizontal;
             cnt.rightBlinker = message.rightBlinker;
             cnt.leftBlinker = message.leftBlinker;
+            cnt.speed = message.speed;
             UpdateObjectPosition(playerInstance, message.id, new Vector3(message.x, 0, message.z), message.rotationY);
         }
     }
@@ -131,7 +132,7 @@ public class ColyseusClientCode : MonoBehaviour
     {
         if (string.IsNullOrEmpty(message.carID))
         {
-            Debug.LogError("Received CarPositionMessage with a null or empty carID.");
+            //Debug.LogError("Received CarPositionMessage with a null or empty carID.");
             return;
         }
 
@@ -141,7 +142,7 @@ public class ColyseusClientCode : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning($"Car ID {message.carID} not found in carInstances.");
+            //Debug.LogWarning($"Car ID {message.carID} not found in carInstances.");
         }
     }
 
@@ -243,7 +244,7 @@ public class ColyseusClientCode : MonoBehaviour
                 Vector3 newPosition = Vector3.Lerp(data.previousPosition, targetPos, t);
                 data.currentObject.transform.position = newPosition;  // Actually move the object
 
-                Debug.Log($"Object {kvp.Key} - Previous: {data.previousPosition}, Target: {targetPos}, New: {newPosition}, t: {t}");
+                //Debug.Log($"Object {kvp.Key} - Previous: {data.previousPosition}, Target: {targetPos}, New: {newPosition}, t: {t}");
 
                 data.currentObject.transform.rotation = Quaternion.Lerp(data.previousRotation, data.targetRotation, t);
                 data.interpolationTime += Time.deltaTime;
@@ -333,6 +334,7 @@ public class PlayerPositionMessage
     public bool leftBlinker;
     public bool isHorizontal;
     public bool hasPriority;
+    public float speed;
 }
 
 [System.Serializable]
