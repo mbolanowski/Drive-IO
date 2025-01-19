@@ -772,6 +772,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   direction: 2
   priority: 0
+  horizontal: 0
 --- !u!1 &1064553621940866307
 GameObject:
   m_ObjectHideFlags: 0
@@ -2250,6 +2251,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   direction: 3
   priority: 0
+  horizontal: 0
 --- !u!1 &2559378290597463052
 GameObject:
   m_ObjectHideFlags: 0
@@ -8879,6 +8881,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   direction: 0
   priority: 0
+  horizontal: 0
 --- !u!1 &6945954763837267414
 GameObject:
   m_ObjectHideFlags: 0
@@ -9600,6 +9603,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   direction: 1
   priority: 0
+  horizontal: 0
 --- !u!1 &7574945101006461508
 GameObject:
   m_ObjectHideFlags: 0

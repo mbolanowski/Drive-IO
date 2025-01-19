@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Colyseus;
 using UnityEngine;
+using System.Linq;
+using System;
 
 public class ColyseusClientCode : MonoBehaviour
 {
@@ -10,107 +12,152 @@ public class ColyseusClientCode : MonoBehaviour
     private static ColyseusRoom<MyRoomState> _room = null;
 
     public Vector2 playerPosition;
-    public GameObject playerPrefab; // Reference to the player prefab
+    public GameObject playerPrefab;
+    public List<GameObject> carObjects = new List<GameObject>(); // List of car GameObjects to track
 
-    private Dictionary<string, GameObject> playerInstances = new Dictionary<string, GameObject>(); // Store player instances by ID
-    private Dictionary<string, Vector3> previousPositions = new Dictionary<string, Vector3>(); // Store previous positions
-    private Dictionary<string, float> previousRotations = new Dictionary<string, float>(); // Store previous rotations
-    private float lerpDuration = 0.1f; // Duration for interpolation
+    public PlayerManager pm;
+    public VehicleControllerWithGears vc;
+
+    // Dictionaries to store instances and interpolation data
+    private Dictionary<string, GameObject> playerInstances = new Dictionary<string, GameObject>();
+    private Dictionary<string, GameObject> carInstances = new Dictionary<string, GameObject>();
+    private Dictionary<string, Vector3> previousPositions = new Dictionary<string, Vector3>();
+    private Dictionary<string, float> previousRotations = new Dictionary<string, float>();
+    private Dictionary<string, InterpolationData> interpolationData = new Dictionary<string, InterpolationData>();
+
+    // Networking settings
+    private float lerpDuration = 0.1f;
+    private float networkTickRate = 0.05f; // 20 updates per second
+    private float nextNetworkTick = 0f;
+    private const float PREDICTION_THRESHOLD = 0.9f; // Maximum prediction time in seconds
+
+    private bool isConnected = false;
+    private string myPlayerId;
 
     private async void Start()
     {
-        // Automatically join or create a game when the game starts
+        Initialize();
         await JoinOrCreateGame();
+        InitializeCarIDs();
+        isConnected = true;
     }
 
-    // Initialize the Colyseus Client and MenuManager
     public void Initialize()
     {
         if (_menuManager == null)
         {
             _menuManager = gameObject.AddComponent<MenuManager>();
         }
-
         _client = new ColyseusClient(_menuManager.HostAddress);
     }
 
-    // Method to join or create a room
     public async Task JoinOrCreateGame()
     {
-        // Create or join a room on the server
-        _room = await Client.JoinOrCreate<MyRoomState>(_menuManager.GameName);
-
-        // Register message handlers to update player positions
-        _room.OnMessage<PlayerPositionMessage>("player_position", message =>
+        try
         {
-            // Update the position of the player identified by message.id
-            UpdatePlayerPosition(message);
-        });
-
-        // Register to handle player joining the room
-        _room.OnMessage<PlayerJoinMessage>("player_join", message =>
-        {
-            // Instantiate a player prefab only if the joined player is not the local player
-            if (message.id != GameRoom.SessionId) // Check if the joining player is not the local player
+            if (_menuManager == null || string.IsNullOrEmpty(_menuManager.HostAddress) || string.IsNullOrEmpty(_menuManager.GameName))
             {
-                InstantiatePlayer(message.id);
+                Debug.LogError("MenuManager not properly initialized!");
+                return;
             }
-        });
+
+            _room = await Client.JoinOrCreate<MyRoomState>(_menuManager.GameName);
+
+            if (_room == null)
+            {
+                Debug.LogError("Failed to create or join room!");
+                return;
+            }
+            _room = await Client.JoinOrCreate<MyRoomState>(_menuManager.GameName);
+
+            int currentPlayers = _room.State.players.Count; // Assuming your room state tracks players
+            myPlayerId = (currentPlayers + 1).ToString();
+
+            // Handle player position updates
+            //_room.OnMessage<PlayerPositionMessage>("player_position", UpdatePlayerPosition);
+
+            // Handle car position updates
+            _room.OnMessage<CarPositionMessage>("car_position", message =>
+            {
+                UpdateCarPosition(message);
+                Debug.Log(message.carID);
+            });
+
+            // Handle player joining
+            _room.OnMessage<PlayerJoinMessage>("player_join", message =>
+            {
+                if (message.id != GameRoom.SessionId)
+                {
+                    InstantiatePlayer(message.id);
+                }
+            });
+
+
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Error joining/creating game: {e.Message}");
+        }
     }
 
-    // Method to instantiate the player prefab
     private void InstantiatePlayer(string playerId)
     {
-        // Instantiate the player prefab at the default position (0, 0, 0)
         GameObject playerInstance = Instantiate(playerPrefab, Vector3.zero, Quaternion.identity);
-        playerInstances[playerId] = playerInstance; // Store the instance by player ID
+        playerInstances[playerId] = playerInstance;
 
-        // Initialize previous position and rotation
-        previousPositions[playerId] = Vector3.zero; // Default starting position
-        previousRotations[playerId] = 0f; // Default starting rotation
+        interpolationData[playerId] = new InterpolationData
+        {
+            currentObject = playerInstance,
+            previousPosition = playerInstance.transform.position,
+            previousRotation = playerInstance.transform.rotation
+        };
     }
 
     private void UpdatePlayerPosition(PlayerPositionMessage message)
     {
-        // Check if the player already exists in the playerInstances dictionary
-        if (playerInstances.TryGetValue(message.id, out GameObject playerInstance))
+        if (!playerInstances.TryGetValue(message.id, out GameObject playerInstance))
         {
-            // Get the target position from the message
-            Vector3 targetPosition = new Vector3(message.x, 0, message.z);
-            float targetRotationY = message.rotationY;
-
-            // Lerp from the current position of the player instance to the target position
-            playerInstance.transform.position = Vector3.Lerp(playerInstance.transform.position, targetPosition, Time.deltaTime / lerpDuration);
-
-            // Lerp from the current rotation to the target rotation
-            playerInstance.transform.rotation = Quaternion.Euler(0, Mathf.LerpAngle(playerInstance.transform.rotation.eulerAngles.y, targetRotationY, Time.deltaTime / lerpDuration), 0);
-        }
-        else
-        {
-            // If the player doesn't exist, instantiate a new player prefab
-            if (message.id != GameRoom.SessionId) // Check if the joining player is not the local player
+            if (message.id != GameRoom.SessionId)
             {
                 InstantiatePlayer(message.id);
-                // Retrieve the instantiated player instance to update its position and rotation
-                playerInstance = playerInstances[message.id]; // Retrieve the newly instantiated player instance
+                playerInstance = playerInstances[message.id];
             }
         }
 
-        // If playerInstance is not null, update its position and rotation
         if (playerInstance != null)
         {
-            Vector3 targetPosition = new Vector3(message.x, 0, message.z);
-            float targetRotationY = message.rotationY;
-
-            // Lerp from the current position of the player instance to the target position
-            playerInstance.transform.position = Vector3.Lerp(playerInstance.transform.position, targetPosition, Time.deltaTime / lerpDuration);
-
-            // Lerp from the current rotation to the target rotation
-            playerInstance.transform.rotation = Quaternion.Euler(0, Mathf.LerpAngle(playerInstance.transform.rotation.eulerAngles.y, targetRotationY, Time.deltaTime / lerpDuration), 0);
+            UpdateObjectPosition(playerInstance, message.id, new Vector3(message.x, 0, message.z), message.rotationY);
         }
     }
 
-    // Get or initialize the Colyseus Client
+    private void UpdateCarPosition(CarPositionMessage message)
+    {
+        if (string.IsNullOrEmpty(message.carID))
+        {
+            Debug.LogError("Received CarPositionMessage with a null or empty carID.");
+            return;
+        }
+
+        // Check if we have a car with this specific ID (e.g., "C0", "C1", etc.)
+        if (carInstances.ContainsKey(message.carID))
+        {
+            GameObject carToUpdate = carInstances[message.carID];
+            if (carToUpdate != null)
+            {
+                UpdateObjectPosition(carToUpdate, message.carID, new Vector3(message.x, 0, message.z), message.rotationY);
+                Debug.Log($"Updated car {message.carID} position to: {message.x}, {message.z}");
+            }
+            else
+            {
+                Debug.LogWarning($"Car with ID {message.carID} exists in dictionary but GameObject is null");
+            }
+        }
+        else
+        {
+            Debug.LogWarning($"Received position update for unknown car ID: {message.carID}");
+        }
+    }
+
     public ColyseusClient Client
     {
         get
@@ -123,7 +170,6 @@ public class ColyseusClientCode : MonoBehaviour
         }
     }
 
-    // Get the current game room
     public ColyseusRoom<MyRoomState> GameRoom
     {
         get
@@ -136,41 +182,181 @@ public class ColyseusClientCode : MonoBehaviour
         }
     }
 
-    // Method to send player position and rotation to the server
+    // Send player position to server
     public void PlayerPosition(Vector2 position, float rotationY)
     {
         if (GameRoom != null)
         {
-            _ = GameRoom.Send("position", new { id = GameRoom.SessionId, x = position.x, z = position.y, rotationY });
+            _ = GameRoom.Send("position", new { id = myPlayerId, x = position.x, z = position.y, rotationY, rightBlinker = vc.GetIsRightBlinkerOn(), leftBlinker = vc.GetIsLeftBlinkerOn(), isHorizontal = vc._isHorizontal, hasPriority = pm._hasRightOfWay });
+            //Debug.Log(myPlayerId);
         }
     }
 
-    // Update loop to check for inputs and send position data
     private void Update()
     {
-        // Send player position to the server every tick
+        if (!isConnected) return;
+
+        // Update player position
         if (_room != null)
         {
-            playerPosition = new Vector2(transform.position.x, transform.position.z);
-            float rotationY = transform.rotation.eulerAngles.y; // Get the Y-axis rotation
-            PlayerPosition(playerPosition, rotationY);
+            // Send car positions at fixed network tick rate
+            if (Time.time >= nextNetworkTick)
+            {
+                playerPosition = new Vector2(transform.position.x, transform.position.z);
+                float rotationY = transform.rotation.eulerAngles.y;
+                PlayerPosition(playerPosition, rotationY);
+                nextNetworkTick = Time.time + networkTickRate;
+            }
+
+            // Interpolate all objects
+            InterpolateObjects();
         }
+    }
+
+    private void SendCarPositions()
+    {
+        if (GameRoom != null)
+        {
+            foreach (var carPair in carInstances)
+            {
+                string carId = carPair.Key;
+                GameObject car = carPair.Value;
+
+                var positionData = new
+                {
+                    carID = carId,
+                    x = car.transform.position.x,
+                    z = car.transform.position.z,
+                    rotationY = car.transform.rotation.eulerAngles.y
+                };
+
+                _ = GameRoom.Send("car_position", positionData);
+            }
+        }
+    }
+
+    private void InterpolateObjects()
+    {
+        if (!isConnected) return;
+
+        foreach (var kvp in interpolationData.ToList())
+        {
+            if (kvp.Value == null || kvp.Value.currentObject == null) continue;
+
+            var data = kvp.Value;
+            if (data.interpolationTime <= lerpDuration)
+            {
+                float t = data.interpolationTime / lerpDuration;
+
+                // Use smoothstep for more natural movement
+                t = t * t * (3f - 2f * t);
+
+                // Lerp to the target position most of the time, only use prediction for fast movements
+                Vector3 targetPos = Vector3.Distance(data.previousPosition, data.targetPosition) > 1f ?
+                    data.predictedPosition : data.targetPosition;
+
+                data.currentObject.transform.position = Vector3.Lerp(data.previousPosition, targetPos, t);
+                data.currentObject.transform.rotation = Quaternion.Lerp(data.previousRotation, data.targetRotation, t);
+                data.interpolationTime += Time.deltaTime;
+            }
+        }
+    }
+
+    private void InitializeCarIDs()
+    {
+        for (int i = 0; i < carObjects.Count; i++)
+        {
+            if (carObjects[i] == null) continue;
+
+            string carId = $"C{i}";
+            carInstances[carId] = carObjects[i];
+            interpolationData[carId] = new InterpolationData
+            {
+                currentObject = carObjects[i],
+                previousPosition = carObjects[i].transform.position,
+                previousRotation = carObjects[i].transform.rotation,
+                targetPosition = carObjects[i].transform.position,  // Initialize these too
+                targetRotation = carObjects[i].transform.rotation,
+                predictedPosition = carObjects[i].transform.position
+            };
+        }
+    }
+
+    private void UpdateObjectPosition(GameObject obj, string id, Vector3 targetPosition, float targetRotation)
+    {
+        if (string.IsNullOrEmpty(id) || obj == null) return;
+
+        InterpolationData data;
+        if (!interpolationData.TryGetValue(id, out data))
+        {
+            data = new InterpolationData
+            {
+                currentObject = obj,
+                previousPosition = obj.transform.position,
+                previousRotation = obj.transform.rotation,
+                targetPosition = targetPosition,
+                targetRotation = Quaternion.Euler(0, targetRotation, 0),
+                predictedPosition = targetPosition
+            };
+            interpolationData[id] = data;
+            return;
+        }
+
+        // Store the current position as previous
+        data.previousPosition = data.currentObject.transform.position;
+        data.previousRotation = data.currentObject.transform.rotation;
+
+        // Set the new target
+        data.targetPosition = targetPosition;
+        data.targetRotation = Quaternion.Euler(0, targetRotation, 0);
+
+        // Calculate velocity based on actual movement, not predictions
+        Vector3 velocity = (targetPosition - data.previousPosition) / networkTickRate;
+
+        // Only apply a small amount of prediction to smooth movement
+        data.predictedPosition = targetPosition + (velocity * (PREDICTION_THRESHOLD * 0.1f));
+
+        // Reset interpolation time
+        data.interpolationTime = 0f;
     }
 }
 
-// A simple class to represent player position message structure
+// Class to store interpolation data for smooth movement
+public class InterpolationData
+{
+    public GameObject currentObject;
+    public Vector3 previousPosition;
+    public Vector3 targetPosition;
+    public Vector3 predictedPosition;
+    public Quaternion previousRotation;
+    public Quaternion targetRotation;
+    public float interpolationTime;
+}
+
 [System.Serializable]
 public class PlayerPositionMessage
 {
-    public string id; // Unique ID of the player
+    public string id;
     public float x;
     public float z;
-    public float rotationY; // Y-axis rotation of the player
+    public float rotationY;
+    public bool rightBlinker;
+    public bool leftBlinker;
+    public bool isHorizontal;
+    public bool hasPriority;
 }
 
-// Class to represent player join message
+[System.Serializable]
+public class CarPositionMessage
+{
+    public string carID;
+    public float x;
+    public float z;
+    public float rotationY;
+}
+
 [System.Serializable]
 public class PlayerJoinMessage
 {
-    public string id; // Unique ID of the newly joined player
+    public string id;
 }

@@ -5,7 +5,6 @@ using TrafficSimulation;
 
 public class VehicleControllerWithGears : MonoBehaviour
 {
-    public TrafficSystem trafficSystem;
     public bool _isHorizontal = false;
     public int intersectionEntranceDirection = 5;
 
@@ -89,13 +88,13 @@ public class VehicleControllerWithGears : MonoBehaviour
             isSKeyReleased = true;
         }
 
-        foreach (Segment segment in trafficSystem.segments)
+        /*foreach (Segment segment in trafficSystem.segments)
         {
             if (segment.IsOnSegment(this.transform.position))
             {
                 _isHorizontal = segment._trueIfHorizontal;
             }
-        }
+        }*/
 
         // Check for blinker input
         HandleBlinkers();

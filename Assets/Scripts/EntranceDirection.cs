@@ -7,6 +7,7 @@ public class EntranceDirection : MonoBehaviour
 {
     public int direction;
     public bool priority;
+    public bool horizontal;
     private void OnTriggerEnter(Collider other)
     {
         if (other.tag == "AutonomousVehicle")
@@ -18,6 +19,7 @@ public class EntranceDirection : MonoBehaviour
         {
             other.GetComponent<VehicleControllerWithGears>().intersectionEntranceDirection = direction;
             GameObject.Find("PlayerManager").GetComponent<PlayerManager>()._hasRightOfWay = priority;
+            other.GetComponent<VehicleControllerWithGears>()._isHorizontal = horizontal;
         }
     }
 }
