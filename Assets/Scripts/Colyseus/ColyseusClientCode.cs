@@ -17,6 +17,7 @@ public class ColyseusClientCode : MonoBehaviour
 
     public PlayerManager pm;
     public VehicleControllerWithGears vc;
+    public VechicleManager vm;
 
     // Dictionaries to store instances and interpolation data
     private Dictionary<string, GameObject> playerInstances = new Dictionary<string, GameObject>();
@@ -187,7 +188,7 @@ public class ColyseusClientCode : MonoBehaviour
     {
         if (GameRoom != null)
         {
-            _ = GameRoom.Send("position", new { id = myPlayerId, x = position.x, z = position.y, rotationY, rightBlinker = vc.GetIsRightBlinkerOn(), leftBlinker = vc.GetIsLeftBlinkerOn(), isHorizontal = vc._isHorizontal, hasPriority = pm._hasRightOfWay });
+            _ = GameRoom.Send("position", new { id = myPlayerId, x = position.x, z = position.y, rotationY, rightBlinker = vc.GetIsRightBlinkerOn(), leftBlinker = vc.GetIsLeftBlinkerOn(), isHorizontal = vc._isHorizontal, hasPriority = pm._hasRightOfWay, turning = vm._declaredDirection });
             //Debug.Log(myPlayerId);
         }
     }
@@ -344,6 +345,7 @@ public class PlayerPositionMessage
     public bool leftBlinker;
     public bool isHorizontal;
     public bool hasPriority;
+    public string turning;
 }
 
 [System.Serializable]

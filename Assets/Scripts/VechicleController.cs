@@ -1,6 +1,5 @@
 using UnityEngine;
 using System.Collections;
-using static UnityEditor.PlayerSettings;
 using TrafficSimulation;
 
 public class VehicleControllerWithGears : MonoBehaviour
