@@ -128,6 +128,7 @@ public class ColyseusClientCode : MonoBehaviour
             cnt.leftBlinker = message.leftBlinker;
             cnt.speed = message.speed;
             cnt.intersectionEntranceDirection = message.entrance;
+            cnt.turning = message.turning;
             UpdateObjectPosition(playerInstance, message.id, new Vector3(message.x, 0, message.z), message.rotationY);
         }
     }
@@ -353,6 +354,7 @@ public class PlayerPositionMessage
     public bool hasPriority;
     public float speed;
     public int entrance;
+    public string turning;
 }
 
 [System.Serializable]
