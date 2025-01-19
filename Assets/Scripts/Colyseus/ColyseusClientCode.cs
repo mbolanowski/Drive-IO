@@ -118,6 +118,11 @@ public class ColyseusClientCode : MonoBehaviour
 
         if (playerInstance != null)
         {
+            CarsController cnt = playerInstance.GetComponent<CarsController>();
+            cnt.hasPriority = message.hasPriority;
+            cnt.isHorizontal = message.isHorizontal;
+            cnt.rightBlinker = message.rightBlinker;
+            cnt.leftBlinker = message.leftBlinker;
             UpdateObjectPosition(playerInstance, message.id, new Vector3(message.x, 0, message.z), message.rotationY);
         }
     }
@@ -323,6 +328,10 @@ public class PlayerPositionMessage
     public float x;
     public float z;
     public float rotationY;
+    public bool rightBlinker;
+    public bool leftBlinker;
+    public bool isHorizontal;
+    public bool hasPriority;
 }
 
 [System.Serializable]
