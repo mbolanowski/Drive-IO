@@ -188,7 +188,7 @@ public class ColyseusClientCode : MonoBehaviour
     {
         if (GameRoom != null)
         {
-            _ = GameRoom.Send("position", new { id = myPlayerId, x = position.x, z = position.y, rotationY, rightBlinker = vc.GetIsRightBlinkerOn(), leftBlinker = vc.GetIsLeftBlinkerOn(), isHorizontal = vc._isHorizontal, hasPriority = pm._hasRightOfWay, turning = vm._declaredDirection, speed = vc.currentSpeed });
+            _ = GameRoom.Send("position", new { id = myPlayerId, x = position.x, z = position.y, rotationY, rightBlinker = vc.GetIsRightBlinkerOn(), leftBlinker = vc.GetIsLeftBlinkerOn(), isHorizontal = vc._isHorizontal, hasPriority = pm._hasRightOfWay, turning = vm._declaredDirection, speed = vc.currentSpeed, entrance = vc.intersectionEntranceDirection });
             //Debug.Log(myPlayerId);
         }
     }
@@ -347,6 +347,7 @@ public class PlayerPositionMessage
     public bool hasPriority;
     public string turning;
     public float speed;
+    public int entrance;
 }
 
 [System.Serializable]
