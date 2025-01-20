@@ -100,22 +100,23 @@ public class TrafficLightManager : MonoBehaviour
 
     public void CommunicateWithServer(int currentGroup, int previousGroup)
     {
-        if (currentGroup == 1 || previousGroup == 1)
+
+        if (currentGroup == 1 && previousGroup == 3)
         {
             SetGroupLights(TrafficLightGroup.Group1, LightColor.Yellow);
             SetGroupLights(TrafficLightGroup.Group2, LightColor.Red);
         }
-        else if (currentGroup == 2 || previousGroup == 1)
+        else if (currentGroup == 2 & previousGroup == 1)
         {
             SetGroupLights(TrafficLightGroup.Group1, LightColor.Red);
             SetGroupLights(TrafficLightGroup.Group2, LightColor.Green);
         }
-        else if (currentGroup == 2 || previousGroup == 2)
+        else if (currentGroup == 2 && previousGroup == 3)
         {
             SetGroupLights(TrafficLightGroup.Group1, LightColor.Red);
             SetGroupLights(TrafficLightGroup.Group2, LightColor.Yellow);
         }
-        else if (currentGroup == 1 || previousGroup == 1)
+        else if (currentGroup == 1 && previousGroup == 2)
         {
             SetGroupLights(TrafficLightGroup.Group1, LightColor.Green);
             SetGroupLights(TrafficLightGroup.Group2, LightColor.Red);

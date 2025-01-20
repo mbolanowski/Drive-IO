@@ -4320,6 +4320,14 @@ PrefabInstance:
       propertyPath: horizontal
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 3634992545549950374, guid: 78dcf7ae38fcbe044a8aeaedf7435ae3, type: 3}
+      propertyPath: group
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4845621919267153353, guid: 78dcf7ae38fcbe044a8aeaedf7435ae3, type: 3}
+      propertyPath: group
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 6747056294222526616, guid: 78dcf7ae38fcbe044a8aeaedf7435ae3, type: 3}
       propertyPath: m_LocalPosition.x
       value: -0.63
@@ -6072,6 +6080,10 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 979558857693178708, guid: ba93c5e1b89bc954ea0d8a6821cc852e, type: 3}
       propertyPath: horizontal
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1717086537874532506, guid: ba93c5e1b89bc954ea0d8a6821cc852e, type: 3}
+      propertyPath: group
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2907268310469920723, guid: ba93c5e1b89bc954ea0d8a6821cc852e, type: 3}
@@ -16775,12 +16787,20 @@ PrefabInstance:
       propertyPath: m_Name
       value: 3 top light
       objectReference: {fileID: 0}
+    - target: {fileID: 3187577802613840750, guid: f9af54ed321b5464e82fa6d6ad664600, type: 3}
+      propertyPath: group
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 3855775076014039959, guid: f9af54ed321b5464e82fa6d6ad664600, type: 3}
       propertyPath: priority
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3855775076014039959, guid: f9af54ed321b5464e82fa6d6ad664600, type: 3}
       propertyPath: horizontal
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4713998708880602526, guid: f9af54ed321b5464e82fa6d6ad664600, type: 3}
+      propertyPath: group
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6747056294222526616, guid: f9af54ed321b5464e82fa6d6ad664600, type: 3}
@@ -21125,9 +21145,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a993431412d3b044cb2cd7527c42c346, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  greenLightDuration: 6
-  yellowLightDuration: 2
-  redLightDuration: 8
 --- !u!4 &644331213
 Transform:
   m_ObjectHideFlags: 0
@@ -34084,6 +34101,14 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3583105028876863534, guid: 78dcf7ae38fcbe044a8aeaedf7435ae3, type: 3}
       propertyPath: horizontal
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3634992545549950374, guid: 78dcf7ae38fcbe044a8aeaedf7435ae3, type: 3}
+      propertyPath: group
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4845621919267153353, guid: 78dcf7ae38fcbe044a8aeaedf7435ae3, type: 3}
+      propertyPath: group
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6747056294222526616, guid: 78dcf7ae38fcbe044a8aeaedf7435ae3, type: 3}

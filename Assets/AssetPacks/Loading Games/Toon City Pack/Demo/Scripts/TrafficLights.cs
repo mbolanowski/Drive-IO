@@ -31,24 +31,30 @@ public class TrafficLights : MonoBehaviour
     {
         currentLight = color;
 
-        // Set colors for active and inactive states
+        // Create or reuse a MaterialPropertyBlock
+        MaterialPropertyBlock block = new MaterialPropertyBlock();
+
+        // Set the color for the respective lights
         Color greenColor = color == LightColor.Green ? Color.green : Color.black;
         Color yellowColor = color == LightColor.Yellow ? Color.yellow : Color.black;
         Color redColor = color == LightColor.Red ? Color.red : Color.black;
 
-        // Store the current active color
-        if (color == LightColor.Green)
-            currentColor = Color.green;
-        else if (color == LightColor.Yellow)
-            currentColor = Color.yellow;
-        else if (color == LightColor.Red)
-            currentColor = Color.red;
-        else
-            currentColor = Color.black;
+        // Apply the color to the appropriate material slots
+        mr.GetPropertyBlock(block, 1); // Green light material
+        block.SetColor("_Color", greenColor);
+        mr.SetPropertyBlock(block, 1);
 
-        // Apply colors to the corresponding materials
-        mr.materials[1].color = greenColor;   // Green light material
-        mr.materials[2].color = yellowColor;  // Yellow light material
-        mr.materials[3].color = redColor;     // Red light material
+        mr.GetPropertyBlock(block, 2); // Yellow light material
+        block.SetColor("_Color", yellowColor);
+        mr.SetPropertyBlock(block, 2);
+
+        mr.GetPropertyBlock(block, 3); // Red light material
+        block.SetColor("_Color", redColor);
+        mr.SetPropertyBlock(block, 3);
+
+        // Update the current active color
+        currentColor = color == LightColor.Green ? Color.green :
+                       color == LightColor.Yellow ? Color.yellow :
+                       color == LightColor.Red ? Color.red : Color.black;
     }
 }
