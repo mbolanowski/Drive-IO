@@ -109,7 +109,7 @@ public class ColyseusClientCode : MonoBehaviour
 
             _room.OnMessage<PlayerJoinMessage>("light", message =>
             {
-                //tm.SwitchLights();
+                tm.SwitchLights();
             });
         }
         catch (Exception e)

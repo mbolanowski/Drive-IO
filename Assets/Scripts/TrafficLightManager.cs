@@ -27,10 +27,7 @@ public class TrafficLightManager : MonoBehaviour
     private Dictionary<TrafficLightGroup, List<TrafficLights>> trafficLightGroups = new Dictionary<TrafficLightGroup, List<TrafficLights>>();
     private Dictionary<TrafficLightGroup, LightColor> groupStates = new Dictionary<TrafficLightGroup, LightColor>();
 
-    [Header("Light Durations (seconds)")]
-    public float greenLightDuration = 6f;
-    public float yellowLightDuration = 2f;
-    public float redLightDuration = 8f;
+    private bool transitionPhase = false; // Tracks whether we are in the yellow phase
 
     private void Awake()
     {
@@ -62,28 +59,34 @@ public class TrafficLightManager : MonoBehaviour
     /// </summary>
     public void SwitchLights()
     {
-        foreach (var group in trafficLightGroups.Keys)
+        if (!transitionPhase)
         {
-            LightColor currentState = groupStates[group];
-            LightColor nextState = GetNextLightState(currentState);
-            SetGroupLights(group, nextState);
+            // Change all green lights to yellow, keep red lights as red
+            foreach (var group in trafficLightGroups.Keys)
+            {
+                if (groupStates[group] == LightColor.Green)
+                {
+                    SetGroupLights(group, LightColor.Yellow);
+                }
+            }
+            transitionPhase = true;
         }
-    }
-
-    /// <summary>
-    /// Returns the next light state based on the current state.
-    /// </summary>
-    /// <param name="currentState">The current light color.</param>
-    /// <returns>The next light color in the cycle.</returns>
-    private LightColor GetNextLightState(LightColor currentState)
-    {
-        return currentState switch
+        else
         {
-            LightColor.Green => LightColor.Yellow,
-            LightColor.Yellow => LightColor.Red,
-            LightColor.Red => LightColor.Green,
-            _ => LightColor.Red, // Default fallback
-        };
+            // Change yellow lights to red, and red lights to green
+            foreach (var group in trafficLightGroups.Keys)
+            {
+                if (groupStates[group] == LightColor.Yellow)
+                {
+                    SetGroupLights(group, LightColor.Red);
+                }
+                else if (groupStates[group] == LightColor.Red)
+                {
+                    SetGroupLights(group, LightColor.Green);
+                }
+            }
+            transitionPhase = false;
+        }
     }
 
     private void SetGroupLights(TrafficLightGroup group, LightColor color)
