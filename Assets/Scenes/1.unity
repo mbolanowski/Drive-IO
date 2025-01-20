@@ -2521,10 +2521,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da25f2dd84260a04eab0744fdedf7d64, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  activeLight: 2
-  greenLightDuration: 10
-  yellowLightDuration: 2
-  redLightDuration: 12
+  group: 0
 --- !u!1 &57623049
 GameObject:
   m_ObjectHideFlags: 0
@@ -7136,6 +7133,7 @@ MonoBehaviour:
   vc: {fileID: 209290609}
   vm: {fileID: 2071745560}
   wsc: {fileID: 1127982674}
+  tm: {fileID: 644331212}
 --- !u!114 &209290609
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10395,10 +10393,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da25f2dd84260a04eab0744fdedf7d64, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  activeLight: 2
-  greenLightDuration: 10
-  yellowLightDuration: 2
-  redLightDuration: 12
+  group: 0
 --- !u!1 &297313572
 GameObject:
   m_ObjectHideFlags: 0
@@ -10529,10 +10524,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da25f2dd84260a04eab0744fdedf7d64, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  activeLight: 0
-  greenLightDuration: 10
-  yellowLightDuration: 2
-  redLightDuration: 12
+  group: 0
 --- !u!1 &308410233
 GameObject:
   m_ObjectHideFlags: 0
@@ -11977,10 +11969,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da25f2dd84260a04eab0744fdedf7d64, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  activeLight: 0
-  greenLightDuration: 10
-  yellowLightDuration: 2
-  redLightDuration: 12
+  group: 0
 --- !u!1 &364260229
 GameObject:
   m_ObjectHideFlags: 0
@@ -12345,10 +12334,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da25f2dd84260a04eab0744fdedf7d64, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  activeLight: 0
-  greenLightDuration: 10
-  yellowLightDuration: 2
-  redLightDuration: 12
+  group: 0
 --- !u!1 &371425928
 GameObject:
   m_ObjectHideFlags: 0
@@ -14306,10 +14292,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da25f2dd84260a04eab0744fdedf7d64, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  activeLight: 2
-  greenLightDuration: 10
-  yellowLightDuration: 2
-  redLightDuration: 12
+  group: 0
 --- !u!1 &429796722
 GameObject:
   m_ObjectHideFlags: 0
@@ -17569,10 +17552,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da25f2dd84260a04eab0744fdedf7d64, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  activeLight: 2
-  greenLightDuration: 10
-  yellowLightDuration: 2
-  redLightDuration: 12
+  group: 0
 --- !u!1 &551282979
 GameObject:
   m_ObjectHideFlags: 0
@@ -18524,10 +18504,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da25f2dd84260a04eab0744fdedf7d64, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  activeLight: 0
-  greenLightDuration: 10
-  yellowLightDuration: 2
-  redLightDuration: 12
+  group: 0
 --- !u!1 &577265036
 GameObject:
   m_ObjectHideFlags: 0
@@ -19034,10 +19011,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da25f2dd84260a04eab0744fdedf7d64, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  activeLight: 2
-  greenLightDuration: 10
-  yellowLightDuration: 2
-  redLightDuration: 12
+  group: 0
 --- !u!4 &586054090 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2819638768608830050, guid: 52c1314c5222d3943b44a3fb75099c16, type: 3}
@@ -21121,10 +21095,54 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da25f2dd84260a04eab0744fdedf7d64, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  activeLight: 2
-  greenLightDuration: 10
+  group: 0
+--- !u!1 &644331211
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 644331213}
+  - component: {fileID: 644331212}
+  m_Layer: 0
+  m_Name: TrafficLightsManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &644331212
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 644331211}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a993431412d3b044cb2cd7527c42c346, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  greenLightDuration: 6
   yellowLightDuration: 2
-  redLightDuration: 12
+  redLightDuration: 8
+--- !u!4 &644331213
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 644331211}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -1.4627109, y: 6.8650618, z: 0.41149533}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &652662394
 GameObject:
   m_ObjectHideFlags: 0
@@ -27051,10 +27069,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da25f2dd84260a04eab0744fdedf7d64, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  activeLight: 0
-  greenLightDuration: 10
-  yellowLightDuration: 2
-  redLightDuration: 12
+  group: 0
 --- !u!4 &831254189 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: ec2830d90b838e54d8d4cc42afc4657b, type: 3}
@@ -33691,10 +33706,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da25f2dd84260a04eab0744fdedf7d64, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  activeLight: 0
-  greenLightDuration: 10
-  yellowLightDuration: 2
-  redLightDuration: 12
+  group: 0
 --- !u!1001 &1059380680
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -40516,10 +40528,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da25f2dd84260a04eab0744fdedf7d64, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  activeLight: 2
-  greenLightDuration: 10
-  yellowLightDuration: 2
-  redLightDuration: 12
+  group: 0
 --- !u!1001 &1271749837
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -43781,10 +43790,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da25f2dd84260a04eab0744fdedf7d64, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  activeLight: 0
-  greenLightDuration: 10
-  yellowLightDuration: 2
-  redLightDuration: 12
+  group: 0
 --- !u!1 &1357744309
 GameObject:
   m_ObjectHideFlags: 0
@@ -45393,10 +45399,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da25f2dd84260a04eab0744fdedf7d64, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  activeLight: 2
-  greenLightDuration: 10
-  yellowLightDuration: 2
-  redLightDuration: 12
+  group: 0
 --- !u!1 &1402561426
 GameObject:
   m_ObjectHideFlags: 0
@@ -47210,8 +47213,16 @@ PrefabInstance:
       propertyPath: horizontal
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 3634992545549950374, guid: 78dcf7ae38fcbe044a8aeaedf7435ae3, type: 3}
+      propertyPath: group
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 4686928752252573096, guid: 78dcf7ae38fcbe044a8aeaedf7435ae3, type: 3}
       propertyPath: priority
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4845621919267153353, guid: 78dcf7ae38fcbe044a8aeaedf7435ae3, type: 3}
+      propertyPath: group
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6747056294222526616, guid: 78dcf7ae38fcbe044a8aeaedf7435ae3, type: 3}
@@ -53572,10 +53583,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da25f2dd84260a04eab0744fdedf7d64, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  activeLight: 2
-  greenLightDuration: 10
-  yellowLightDuration: 2
-  redLightDuration: 12
+  group: 0
 --- !u!1 &1616448842
 GameObject:
   m_ObjectHideFlags: 0
@@ -56631,10 +56639,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da25f2dd84260a04eab0744fdedf7d64, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  activeLight: 0
-  greenLightDuration: 10
-  yellowLightDuration: 2
-  redLightDuration: 12
+  group: 0
 --- !u!1 &1714214137
 GameObject:
   m_ObjectHideFlags: 0
@@ -72526,3 +72531,4 @@ SceneRoots:
   - {fileID: 118186328}
   - {fileID: 634351463}
   - {fileID: 354099759}
+  - {fileID: 644331213}

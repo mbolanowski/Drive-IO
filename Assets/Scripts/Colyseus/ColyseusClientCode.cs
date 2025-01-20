@@ -19,6 +19,7 @@ public class ColyseusClientCode : MonoBehaviour
     public VehicleControllerWithGears vc;
     public VechicleManager vm;
     public WarningSystemController wsc;
+    public TrafficLightManager tm;
 
     // Dictionaries to store instances and interpolation data
     private Dictionary<string, GameObject> playerInstances = new Dictionary<string, GameObject>();
@@ -106,7 +107,11 @@ public class ColyseusClientCode : MonoBehaviour
                 }
             });
 
-
+            _room.OnMessage<LightsMessage>("lights", message =>
+            {
+                //tm.SkipForward(message.id);
+                Debug.Log(message.id);
+            });
         }
         catch (Exception e)
         {
@@ -394,4 +399,10 @@ public class CarPositionMessage
 public class PlayerJoinMessage
 {
     public string id;
+}
+
+[System.Serializable]
+public class LightsMessage
+{
+    public float id;
 }

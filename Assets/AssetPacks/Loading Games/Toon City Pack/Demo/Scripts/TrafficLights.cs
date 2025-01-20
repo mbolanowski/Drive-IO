@@ -2,73 +2,49 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum LightColor { Red, Yellow, Green, None }
 
 public class TrafficLights : MonoBehaviour
 {
-    public LightColor activeLight;  // This can be set from the Inspector to define the starting light
-    private LightColor lastActiveLight;
     private MeshRenderer mr;
+    public LightColor currentLight { get; private set; }
 
-    // Expose light durations to the editor
-    [Header("Light Durations (seconds)")]
-    public float greenLightDuration = 10f;
-    public float yellowLightDuration = 2f;
-    public float redLightDuration = 10f;
+    [SerializeField]
+    private TrafficLightGroup group; // Set this in the Inspector
+
+    public Color currentColor { get; private set; } // New variable to track current color
 
     private void Start()
     {
         mr = GetComponent<MeshRenderer>();
-        lastActiveLight = activeLight;
-
-        // Set the initial light based on the selected active light
-        SetLight(activeLight);
-
-        // Start the coroutine to cycle lights
-        StartCoroutine(TrafficLightCycle());
+        TrafficLightManager.Instance.RegisterTrafficLight(this, group);
     }
 
-    private void Update()
+    private void OnDestroy()
     {
-        // Check if the active light has changed
-        if (activeLight != lastActiveLight)
+        if (TrafficLightManager.Instance != null)
         {
-            SetLight(activeLight);   // Update the light visuals
-            lastActiveLight = activeLight; // Update the tracker
+            TrafficLightManager.Instance.UnregisterTrafficLight(this, group);
         }
     }
 
-    private IEnumerator TrafficLightCycle()
+    public void UpdateLight(LightColor color)
     {
-        while (true)
-        {
-            switch (activeLight)
-            {
-                case LightColor.Green:
-                    yield return new WaitForSeconds(greenLightDuration);
-                    activeLight = LightColor.Yellow;
-                    break;
-                case LightColor.Yellow:
-                    yield return new WaitForSeconds(yellowLightDuration);
-                    activeLight = LightColor.Red;
-                    break;
-                case LightColor.Red:
-                    yield return new WaitForSeconds(redLightDuration);
-                    activeLight = LightColor.Green;
-                    break;
-                default:
-                    yield return null;
-                    break;
-            }
-        }
-    }
+        currentLight = color;
 
-    public void SetLight(LightColor color)
-    {
         // Set colors for active and inactive states
         Color greenColor = color == LightColor.Green ? Color.green : Color.black;
         Color yellowColor = color == LightColor.Yellow ? Color.yellow : Color.black;
         Color redColor = color == LightColor.Red ? Color.red : Color.black;
+
+        // Store the current active color
+        if (color == LightColor.Green)
+            currentColor = Color.green;
+        else if (color == LightColor.Yellow)
+            currentColor = Color.yellow;
+        else if (color == LightColor.Red)
+            currentColor = Color.red;
+        else
+            currentColor = Color.black;
 
         // Apply colors to the corresponding materials
         mr.materials[1].color = greenColor;   // Green light material

@@ -37,7 +37,7 @@ public class TrafficLightsChange : MonoBehaviour
             // Check if the angle is within the defined tolerance
             if (angle <= angleTolerance)
             {
-                LightColor lightColor = transform.parent.GetComponent<TrafficLights>().activeLight;
+                LightColor lightColor = transform.parent.GetComponent<TrafficLights>().currentLight;
                 if (lightColor != null)
                 {
                     if (lightColor == LightColor.Red)
