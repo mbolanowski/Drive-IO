@@ -26,6 +26,12 @@ namespace TrafficSimulation
         private List<GameObject> vehiclesInIntersection;
         private TrafficSystem trafficSystem;
 
+        public GameObject cube;
+
+        public bool once = false;
+
+        public ColyseusClientCode cc;
+
         [HideInInspector] public int currentRedLightsGroup = 1;
 
         private float lastSwitchTime; // Tracks the last state change time
@@ -38,6 +44,13 @@ namespace TrafficSimulation
             turningRightQueue = new List<GameObject>();
             turningStraightQueue = new List<GameObject>();
             vehiclesInIntersection = new List<GameObject>();
+
+             cube = GameObject.Find("SuperCube");
+
+            if(cc == null)
+            {
+                cc = GameObject.Find("Colyseus").GetComponent<ColyseusClientCode>();
+            }
 
             if (intersectionType == IntersectionType.TRAFFIC_LIGHT)
             {
@@ -576,13 +589,38 @@ namespace TrafficSimulation
             }
         }
 
+        private void Update()
+        {
+            if (this.name == "Intersection-2" && currentRedLightsGroup == 2)
+            {
+                if (Time.time - lastSwitchTime > 6f && !once)
+                {
+                    cc.notifyLight("Lights switched");
+                    once = true;
+                }
+            }
+        }
+
         void SwitchLights()
         {
+            if (this.name == "Intersection-2")
+            {
+                cc.notifyLight("Lights switched");
+            }
             // Switch light groups
-            if (currentRedLightsGroup == 1) currentRedLightsGroup = 2;
-            else if (currentRedLightsGroup == 2) currentRedLightsGroup = 1;
+            if (currentRedLightsGroup == 1)
+            {
+                currentRedLightsGroup = 2;
+                cube.SetActive(false);
+            }
+            else if (currentRedLightsGroup == 2)
+            {
+                currentRedLightsGroup = 1;
+                cube.SetActive(true);
+            }
 
             lastSwitchTime = Time.time;
+            once = false;
 
             // Wait for orange light duration before checking queued vehicles
             Invoke("CheckQueuedVehiclesTrafficLight", orangeLightDuration);

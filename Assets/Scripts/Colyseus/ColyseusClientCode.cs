@@ -361,6 +361,14 @@ public class ColyseusClientCode : MonoBehaviour
         }
     }
 
+    public void notifyLight(string ids)
+    {
+        if (GameRoom != null)
+        {
+            _ = GameRoom.Send("light", new { id = ids });
+        }
+    }
+
 }
 
 // Class to store interpolation data for smooth movement
