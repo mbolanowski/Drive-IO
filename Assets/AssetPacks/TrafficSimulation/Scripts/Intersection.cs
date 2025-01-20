@@ -591,11 +591,11 @@ namespace TrafficSimulation
 
         private void Update()
         {
-            if (this.name == "Intersection-2" && currentRedLightsGroup == 2)
+            if (this.name == "Intersection-2")
             {
                 if (Time.time - lastSwitchTime > 6f && !once)
                 {
-                    cc.notifyLight("Lights switched");
+                    cc.notifyLight(currentRedLightsGroup);
                     once = true;
                 }
             }
@@ -603,10 +603,6 @@ namespace TrafficSimulation
 
         void SwitchLights()
         {
-            if (this.name == "Intersection-2")
-            {
-                cc.notifyLight("Lights switched");
-            }
             // Switch light groups
             if (currentRedLightsGroup == 1)
             {
@@ -617,6 +613,11 @@ namespace TrafficSimulation
             {
                 currentRedLightsGroup = 1;
                 cube.SetActive(true);
+            }
+
+            if (this.name == "Intersection-2")
+            {
+                cc.notifyLight(currentRedLightsGroup);
             }
 
             lastSwitchTime = Time.time;

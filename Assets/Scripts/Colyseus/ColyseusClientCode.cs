@@ -360,7 +360,7 @@ public class ColyseusClientCode : MonoBehaviour
         }
     }
 
-    public void notifyLight(string ids)
+    public void notifyLight(int ids)
     {
         if (GameRoom != null)
         {
