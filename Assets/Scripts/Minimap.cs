@@ -20,6 +20,7 @@ public class Minimap : MonoBehaviour
     private void Start()
     {
         InitializeMinimap();
+        RefreshMinimap();
     }
 
     // Initialize the minimap grid
@@ -61,28 +62,66 @@ public class Minimap : MonoBehaviour
             }
             else
             {
-                Debug.LogWarning($"Tile at ({x}, {y}) does not have a Renderer component.");
+                //Debug.LogWarning($"Tile at ({x}, {y}) does not have a Renderer component.");
             }
 
             // Start the grow/shrink animation
-            StartCoroutine(AnimateTileSize(x, y));
+           // StartCoroutine(AnimateTileSize(x, y));
         }
         else
         {
-            Debug.LogWarning($"Tile coordinates ({x}, {y}) are out of bounds.");
+            //Debug.LogWarning($"Tile coordinates ({x}, {y}) are out of bounds.");
+        }
+    }
+
+
+    public void RefreshMinimap()
+    {
+        for (int x = 0; x < gridSizeX; x++)
+        {
+            for (int y = 0; y < gridSizeY; y++)
+            {
+                // Skip tiles that are currently blinking
+                if (IsTileBlinking(x, y))
+                {
+                    continue;
+                }
+
+                // Set the default color for non-blinking tiles
+                SetTileColor(x, y, new Color(1f, 1f, 1f, 0.2745f)); // Adjust default color as needed
+            }
+        }
+        //Debug.Log("refreshing");
+        // Iterate through all tiles held by the player (heldTiles)
+        foreach (var tile in pm.heldTiles)
+        {
+            //Debug.Log("????");
+            SetTileColor(tile.Item1, tile.Item2, vm.vehicleColor);
+        }
+
+        // Iterate through all tiles in OtherHeldTiles
+        foreach (var tile in pm.OtherHeldTiles)
+        {
+            //Debug.Log(tile.Item1 + " " + tile.Item2);
+            SetTileColor(tile.Item1, tile.Item2, new Color(0.2f, 0.2f, 0.2f, 0.2745f));
         }
     }
 
     public Color GetTileColor(int x, int y)
     {
         Renderer tileRenderer = tiles[x, y].GetComponent<Renderer>();
-        if (tileRenderer != null) 
+        if (tileRenderer != null)
         {
             Color color = tileRenderer.material.color;
             color.a = 0.0f;
             return color;
         }
         return Color.white;
+    }
+
+    public bool IsTileBlinking(int x, int y)
+    {
+        return blinkingTiles.ContainsKey((x, y));
     }
 
     private IEnumerator AnimateTileSize(int x, int y)
@@ -123,7 +162,7 @@ public class Minimap : MonoBehaviour
             // Stop blinking if already blinking
             StopBlinkingTile(x, y);
 
-            if (pm.GetTileOwner(x, y))
+            if (pm.heldTiles.Contains((x, y)))
             {
                     Color color = new Color(
                     Mathf.Clamp01(blinkColor.r - 0.2f), // Adjust the red component and clamp it between 0 and 1
@@ -142,7 +181,7 @@ public class Minimap : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning($"Tile coordinates ({x}, {y}) are out of bounds.");
+            //Debug.LogWarning($"Tile coordinates ({x}, {y}) are out of bounds.");
         }
     }
 
@@ -165,7 +204,7 @@ public class Minimap : MonoBehaviour
         Renderer tileRenderer = tiles[x, y].GetComponent<Renderer>();
         if (tileRenderer == null)
         {
-            Debug.LogWarning($"Tile at ({x}, {y}) does not have a Renderer component.");
+            //Debug.LogWarning($"Tile at ({x}, {y}) does not have a Renderer component.");
             yield break;
         }
         blinkColor.a = 1.0f;

@@ -84,7 +84,7 @@ public class TriggerDirectionCheck : MonoBehaviour
             CarsController carsController = other.GetComponent<CarsController>();
             if (carsController != null)
             {
-                carsController.HasRightOfWay = rightOfWay;
+                carsController.hasPriority = rightOfWay;
             }
         }
         

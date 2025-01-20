@@ -9,6 +9,7 @@ public class MoveGameObject : MonoBehaviour
     public VechicleManager vm;
     public Minimap mm;
     public PlayerManager pm;
+    public ColyseusClientCode cc;
 
     // The amount to subtract from the x position
     private const float OffsetX = 13.62f;
@@ -23,6 +24,10 @@ public class MoveGameObject : MonoBehaviour
         if (pm == null)
         {
             pm = GameObject.Find("PlayerManager").GetComponent<PlayerManager>();
+        }
+        if (cc == null)
+        {
+            cc = GameObject.Find("Car").GetComponent<ColyseusClientCode>();
         }
         // Mark as initialized after the first frame
         //StartCoroutine(InitializeAfterFrame());
@@ -66,6 +71,7 @@ public class MoveGameObject : MonoBehaviour
                 {
                     mm.SetTileColor(vm.GetCurrentTileX(), vm.GetCurrentTileY(), vm.vehicleColor);
                     pm.AssignTile(vm.GetCurrentTileX(), vm.GetCurrentTileY());
+                    cc.notifyTookTile(vm.GetCurrentTileX(), vm.GetCurrentTileY());
                 }
                 vm.SetCurrentTile(gameObject.name[0] - '0', gameObject.name[1] - '0');
                 mm.StartBlinkingTile(vm.GetCurrentTileX(), vm.GetCurrentTileY(), vm.vehicleColor, 0.5f);

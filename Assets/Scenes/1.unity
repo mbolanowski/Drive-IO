@@ -2274,6 +2274,7 @@ MonoBehaviour:
   vm: {fileID: 2071745560}
   mm: {fileID: 733642302}
   pm: {fileID: 0}
+  cc: {fileID: 0}
 --- !u!114 &47624499
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2897,6 +2898,7 @@ MonoBehaviour:
   vm: {fileID: 2071745560}
   mm: {fileID: 733642302}
   pm: {fileID: 0}
+  cc: {fileID: 0}
 --- !u!114 &71197040
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7113,7 +7115,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   playerPosition: {x: 0, y: 0}
-  playerPrefab: {fileID: 2116873390560433033, guid: d5f10d91da5e3c64ba5ca27b86a871d1, type: 3}
+  playerPrefab: {fileID: 305828497629698098, guid: 5dfa505209be304449d49ec7f381bce0, type: 3}
   carObjects:
   - {fileID: 2063966201685696830}
   - {fileID: 238108169}
@@ -7146,6 +7148,9 @@ MonoBehaviour:
   vm: {fileID: 2071745560}
   wsc: {fileID: 1127982674}
   tm: {fileID: 644331212}
+  mm: {fileID: 733642302}
+  sm: {fileID: 1755336561}
+  nameText: {fileID: 1153437812}
 --- !u!114 &209290609
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12156,6 +12161,7 @@ MonoBehaviour:
   vm: {fileID: 2071745560}
   mm: {fileID: 733642302}
   pm: {fileID: 0}
+  cc: {fileID: 0}
 --- !u!114 &367963419
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -14529,6 +14535,7 @@ MonoBehaviour:
   vm: {fileID: 2071745560}
   mm: {fileID: 733642302}
   pm: {fileID: 0}
+  cc: {fileID: 0}
 --- !u!114 &429810860
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -20058,6 +20065,7 @@ MonoBehaviour:
   vm: {fileID: 2071745560}
   mm: {fileID: 733642302}
   pm: {fileID: 0}
+  cc: {fileID: 0}
 --- !u!114 &619893839
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -22194,6 +22202,7 @@ MonoBehaviour:
   vm: {fileID: 2071745560}
   mm: {fileID: 733642302}
   pm: {fileID: 0}
+  cc: {fileID: 0}
 --- !u!114 &693955248
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -30330,6 +30339,7 @@ MonoBehaviour:
   vm: {fileID: 2071745560}
   mm: {fileID: 733642302}
   pm: {fileID: 0}
+  cc: {fileID: 0}
 --- !u!114 &952578188
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -33204,6 +33214,7 @@ MonoBehaviour:
   sm: {fileID: 1755336561}
   vc: {fileID: 209290609}
   mm: {fileID: 733642302}
+  cc: {fileID: 209290608}
   CameraMover: {fileID: 1056056924}
   _speedMultiplier: 20
   lanePosition: Right
@@ -35767,6 +35778,7 @@ MonoBehaviour:
   vm: {fileID: 2071745560}
   mm: {fileID: 733642302}
   pm: {fileID: 0}
+  cc: {fileID: 0}
 --- !u!114 &1114603965
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -38175,6 +38187,7 @@ MonoBehaviour:
   vm: {fileID: 2071745560}
   mm: {fileID: 733642302}
   pm: {fileID: 0}
+  cc: {fileID: 0}
 --- !u!114 &1193951212
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -42814,6 +42827,7 @@ MonoBehaviour:
   vm: {fileID: 2071745560}
   mm: {fileID: 733642302}
   pm: {fileID: 0}
+  cc: {fileID: 0}
 --- !u!114 &1327211335
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -47494,6 +47508,7 @@ MonoBehaviour:
   vm: {fileID: 2071745560}
   mm: {fileID: 733642302}
   pm: {fileID: 0}
+  cc: {fileID: 0}
 --- !u!114 &1455227997
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -51960,6 +51975,7 @@ MonoBehaviour:
   vm: {fileID: 2071745560}
   mm: {fileID: 733642302}
   pm: {fileID: 0}
+  cc: {fileID: 0}
 --- !u!114 &1577863039
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -53395,6 +53411,7 @@ MonoBehaviour:
   vm: {fileID: 2071745560}
   mm: {fileID: 733642302}
   pm: {fileID: 0}
+  cc: {fileID: 0}
 --- !u!114 &1612231027
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -54919,6 +54936,7 @@ MonoBehaviour:
   vm: {fileID: 2071745560}
   mm: {fileID: 733642302}
   pm: {fileID: 0}
+  cc: {fileID: 0}
 --- !u!114 &1653376680
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -55994,6 +56012,7 @@ MonoBehaviour:
   vm: {fileID: 2071745560}
   mm: {fileID: 733642302}
   pm: {fileID: 0}
+  cc: {fileID: 0}
 --- !u!114 &1701845228
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -57920,6 +57939,8 @@ MonoBehaviour:
   spawnHeight: 0.19
   vc: {fileID: 209290609}
   CameraMover: {fileID: 1056056924}
+  cc: {fileID: 209290608}
+  availableSpawnSpots: 
 --- !u!1 &1756218568
 GameObject:
   m_ObjectHideFlags: 0
@@ -59831,6 +59852,7 @@ MonoBehaviour:
   vm: {fileID: 2071745560}
   mm: {fileID: 733642302}
   pm: {fileID: 0}
+  cc: {fileID: 0}
 --- !u!114 &1820293372
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -61741,6 +61763,7 @@ MonoBehaviour:
   vm: {fileID: 2071745560}
   mm: {fileID: 733642302}
   pm: {fileID: 0}
+  cc: {fileID: 0}
 --- !u!114 &1856320794
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -61985,6 +62008,7 @@ MonoBehaviour:
   vm: {fileID: 2071745560}
   mm: {fileID: 733642302}
   pm: {fileID: 0}
+  cc: {fileID: 0}
 --- !u!114 &1870191073
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -65899,6 +65923,7 @@ MonoBehaviour:
   vm: {fileID: 2071745560}
   mm: {fileID: 733642302}
   pm: {fileID: 0}
+  cc: {fileID: 0}
 --- !u!114 &1978597711
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -66875,6 +66900,7 @@ MonoBehaviour:
   vm: {fileID: 2071745560}
   mm: {fileID: 733642302}
   pm: {fileID: 0}
+  cc: {fileID: 0}
 --- !u!114 &2009129238
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -72543,6 +72569,63 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 4574175864208166234, guid: 84e4bf2bcad052543b50a92e63ee6d76, type: 3}
   m_PrefabInstance: {fileID: 2063966201685696828}
   m_PrefabAsset: {fileID: 0}
+--- !u!1001 &7482925881402828933
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 305828497629698098, guid: 5dfa505209be304449d49ec7f381bce0, type: 3}
+      propertyPath: m_Name
+      value: PlayerCarPrefab
+      objectReference: {fileID: 0}
+    - target: {fileID: 4264637009027783570, guid: 5dfa505209be304449d49ec7f381bce0, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4264637009027783570, guid: 5dfa505209be304449d49ec7f381bce0, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.279
+      objectReference: {fileID: 0}
+    - target: {fileID: 4264637009027783570, guid: 5dfa505209be304449d49ec7f381bce0, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -22.431
+      objectReference: {fileID: 0}
+    - target: {fileID: 4264637009027783570, guid: 5dfa505209be304449d49ec7f381bce0, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4264637009027783570, guid: 5dfa505209be304449d49ec7f381bce0, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4264637009027783570, guid: 5dfa505209be304449d49ec7f381bce0, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4264637009027783570, guid: 5dfa505209be304449d49ec7f381bce0, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4264637009027783570, guid: 5dfa505209be304449d49ec7f381bce0, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4264637009027783570, guid: 5dfa505209be304449d49ec7f381bce0, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4264637009027783570, guid: 5dfa505209be304449d49ec7f381bce0, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 5dfa505209be304449d49ec7f381bce0, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -72557,3 +72640,4 @@ SceneRoots:
   - {fileID: 634351463}
   - {fileID: 354099759}
   - {fileID: 644331213}
+  - {fileID: 7482925881402828933}

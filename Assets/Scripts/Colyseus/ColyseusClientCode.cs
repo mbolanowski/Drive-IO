@@ -4,6 +4,10 @@ using Colyseus;
 using UnityEngine;
 using System.Linq;
 using System;
+using UnityEditor;
+using Unity.VisualScripting;
+using TMPro;
+using static TileOwnershipMessage;
 
 public class ColyseusClientCode : MonoBehaviour
 {
@@ -20,6 +24,10 @@ public class ColyseusClientCode : MonoBehaviour
     public VechicleManager vm;
     public WarningSystemController wsc;
     public TrafficLightManager tm;
+    public Minimap mm;
+    public SpawnManager sm;
+
+    public TextMeshPro nameText;
 
     // Dictionaries to store instances and interpolation data
     private Dictionary<string, GameObject> playerInstances = new Dictionary<string, GameObject>();
@@ -43,6 +51,7 @@ public class ColyseusClientCode : MonoBehaviour
         await JoinOrCreateGame();
         InitializeCarIDs();
         isConnected = true;
+        Application.quitting += OnApplicationQuit;
     }
 
     public void Initialize()
@@ -60,7 +69,7 @@ public class ColyseusClientCode : MonoBehaviour
         {
             if (_menuManager == null || string.IsNullOrEmpty(_menuManager.HostAddress) || string.IsNullOrEmpty(_menuManager.GameName))
             {
-                Debug.LogError("MenuManager not properly initialized!");
+                //Debug.LogError("MenuManager not properly initialized!");
                 return;
             }
 
@@ -68,16 +77,20 @@ public class ColyseusClientCode : MonoBehaviour
 
             if (_room == null)
             {
-                Debug.LogError("Failed to create or join room!");
+                //Debug.LogError("Failed to create or join room!");
                 return;
             }
-            _room = await Client.JoinOrCreate<MyRoomState>(_menuManager.GameName);
 
-            int currentPlayers = _room.State.players.Count; // Assuming your room state tracks players
-            myPlayerId = (currentPlayers + 1).ToString();
+            _room.OnMessage<PlayerJoinMessage>("player_leave", message =>
+            {
+                RemovePlayer(message.id);
+            });
+
+
+            //_room = await Client.JoinOrCreate<MyRoomState>(_menuManager.GameName);
 
             // Handle player position updates
-            //_room.OnMessage<PlayerPositionMessage>("player_position", UpdatePlayerPosition);
+            _room.OnMessage<PlayerPositionMessage>("player_position", UpdatePlayerPosition);
 
             // Handle car position updates
             _room.OnMessage<CarPositionMessage>("car_position", message =>
@@ -89,10 +102,12 @@ public class ColyseusClientCode : MonoBehaviour
             // Handle player joining
             _room.OnMessage<PlayerJoinMessage>("player_join", message =>
             {
-                if (message.id != GameRoom.SessionId)
-                {
-                    InstantiatePlayer(message.id);
-                }
+            });
+
+            _room.OnMessage<PlayerJoinMessage>("player_id", message =>
+            {
+                myPlayerId = message.id;
+                //Debug.Log($"Assigned Player ID: {myPlayerId}");
             });
 
             _room.OnMessage<PlayerJoinMessage>("intersection", message =>
@@ -103,7 +118,7 @@ public class ColyseusClientCode : MonoBehaviour
                     pm.AddIncident();
                     wsc.SetInfoText("You had no right of way");
                     wsc.SetPenaltyText("-2 Life");
-                    Debug.Log("Wykroczenie");
+                    //Debug.Log("Wykroczenie");
                 }
             });
 
@@ -112,10 +127,61 @@ public class ColyseusClientCode : MonoBehaviour
                 tm.CommunicateWithServer(message.id, message.prev);
 
             });
+
+            _room.OnMessage<SpawningMessage>("getSpawn", message =>
+            {
+                sm.availableSpawnSpots = message.x;
+            });
+
+            _room.OnMessage<PlayerJoinMessage>("death", message =>
+            {
+
+                if(mm.isActiveAndEnabled) mm.RefreshMinimap();
+
+            });
+
+            _room.OnMessage<TileMessage>("tileTaken", message =>
+            {
+                if (message.id != myPlayerId)
+                {
+                    //pm.RemoveTile(message.xx, message.yy);
+                }
+
+            });
+
+            _room.OnMessage<TileOwnershipMessage>("current_tiles", (message) =>
+            {
+                // Clear OtherHeldTiles to start fresh with server state
+                pm.OtherHeldTiles.Clear();
+
+                foreach (var playerOwnership in message.ownerships)
+                {
+                    string playerId = playerOwnership.Key;
+                    TilePosition[] tiles = playerOwnership.Value;
+
+                    foreach (var tile in tiles)
+                    {
+                        if (playerId == myPlayerId)
+                        {
+                            // Add to heldTiles if we don't already have it
+                            if (!pm.heldTiles.Contains((tile.x, tile.y)))
+                            {
+                                pm.AssignTile(tile.x, tile.y);
+                            }
+                        }
+                        else
+                        {
+                            // Add to OtherHeldTiles and mark as taken
+                            pm.OtherHeldTiles.Add((tile.x, tile.y));
+                            pm.RemoveTile(tile.x, tile.y);  // This sets the visual state
+                        }
+                    }
+                }
+            });
         }
         catch (Exception e)
         {
-            Debug.LogError($"Error joining/creating game: {e.Message}");
+            //Debug.LogError($"Error joining/creating game: {e.Message}");
         }
     }
 
@@ -135,17 +201,29 @@ public class ColyseusClientCode : MonoBehaviour
     private void UpdatePlayerPosition(PlayerPositionMessage message)
     {
         if (!playerInstances.TryGetValue(message.id, out GameObject playerInstance))
-        {
-            if (message.id != GameRoom.SessionId)
+        {   
+            if (message.id != myPlayerId)
             {
                 InstantiatePlayer(message.id);
                 playerInstance = playerInstances[message.id];
             }
         }
 
-        if (playerInstance != null)
+        if ((playerInstance != null) && (message.id != myPlayerId))
         {
+            CarsController cnt = playerInstance.GetComponent<CarsController>();
+            cnt.hasPriority = message.hasPriority;
+            cnt.isHorizontal = message.isHorizontal;
+            cnt.rightBlinker = message.rightBlinker;
+            cnt.leftBlinker = message.leftBlinker;
+            cnt.speed = message.speed;
+            cnt.intersectionEntranceDirection = message.entrance;
+            cnt.turning = message.turning;
+
             UpdateObjectPosition(playerInstance, message.id, new Vector3(message.x, 0, message.z), message.rotationY);
+            FloatingTextNPC ftn = playerInstance.GetComponentInChildren<FloatingTextNPC>();
+
+            playerInstance.GetComponentInChildren<FloatingTextNPC>().displayText = message.name;
         }
     }
 
@@ -203,7 +281,7 @@ public class ColyseusClientCode : MonoBehaviour
         {
             if (_room == null)
             {
-                Debug.LogError("Room hasn't been initialized yet!");
+                //Debug.LogError("Room hasn't been initialized yet!");
             }
             return _room;
         }
@@ -214,7 +292,7 @@ public class ColyseusClientCode : MonoBehaviour
     {
         if (GameRoom != null)
         {
-            _ = GameRoom.Send("position", new { id = myPlayerId, x = position.x, z = position.y, rotationY, rightBlinker = vc.GetIsRightBlinkerOn(), leftBlinker = vc.GetIsLeftBlinkerOn(), isHorizontal = vc._isHorizontal, hasPriority = pm._hasRightOfWay, turning = vm._declaredDirection, speed = vc.currentSpeed, entrance = vc.intersectionEntranceDirection });
+            _ = GameRoom.Send("position", new { id = myPlayerId, x = position.x, z = position.y, rotationY, rightBlinker = vc.GetIsRightBlinkerOn(), leftBlinker = vc.GetIsLeftBlinkerOn(), isHorizontal = vc._isHorizontal, hasPriority = pm._hasRightOfWay, turning = vm._declaredDirection, speed = vc.currentSpeed, entrance = vc.intersectionEntranceDirection, name = nameText.text });
             //Debug.Log(myPlayerId);
         }
     }
@@ -226,6 +304,7 @@ public class ColyseusClientCode : MonoBehaviour
         // Update player position
         if (_room != null)
         {
+            //Debug.Log(myPlayerId);
             // Send car positions at fixed network tick rate
             if (Time.time >= nextNetworkTick)
             {
@@ -271,6 +350,25 @@ public class ColyseusClientCode : MonoBehaviour
             if (kvp.Value == null || kvp.Value.currentObject == null) continue;
 
             var data = kvp.Value;
+
+            // Calculate the distance between previous and current positions
+            float distance = Vector3.Distance(data.previousPosition, data.targetPosition);
+
+            // Skip interpolation if the distance is too large (e.g., greater than 10 units)
+            if (distance > 5f)
+            {
+                // Directly set the object's position and rotation without interpolation
+                data.currentObject.transform.position = data.targetPosition;
+                data.currentObject.transform.rotation = data.targetRotation;
+
+                // Reset interpolation data to prevent further interpolation for this update
+                data.previousPosition = data.targetPosition;
+                data.previousRotation = data.targetRotation;
+                data.interpolationTime = 0f;
+                continue;
+            }
+
+            // Proceed with normal interpolation if movement is not too large
             if (data.interpolationTime <= lerpDuration)
             {
                 float t = data.interpolationTime / lerpDuration;
@@ -347,11 +445,109 @@ public class ColyseusClientCode : MonoBehaviour
         data.interpolationTime = 0f;
     }
 
+    public void notifyTookTile(int x, int y)
+    {
+        if (GameRoom != null)
+        {
+            _ = GameRoom.Send("tileTaken", new {id = myPlayerId, xx = x, yy = y });
+        }
+    }
+
     public void notifyViolation()
     {
         if (GameRoom != null)
         {
             _ = GameRoom.Send("position", new { id = myPlayerId});
+        }
+    }
+
+    public void notifyDeath()
+    {
+        if (GameRoom != null)
+        {
+            _ = GameRoom.Send("death", new { id = myPlayerId });
+        }
+    }
+
+    public void setSpawn(int spawns)
+    {
+        if (GameRoom != null)
+        {
+            _ = GameRoom.Send("spawn", new { id = myPlayerId, spawn = spawns });
+        }
+    }
+
+    public void getSpawn()
+    {
+        if (GameRoom != null)
+        {
+            _ = GameRoom.Send("getSpawn", new { id = myPlayerId});
+        }
+    }
+
+#if UNITY_EDITOR
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+    static void RegisterPlayModeStateChanged()
+    {
+        EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+    }
+
+    private static void OnPlayModeStateChanged(PlayModeStateChange state)
+    {
+        if (state == PlayModeStateChange.ExitingPlayMode)
+        {
+            //Debug.Log("Exiting Play Mode: Leaving Colyseus room...");
+
+            // Example: Get the room instance and call Leave (you'll need to adjust based on your setup)
+            var handler = FindObjectOfType<ColyseusClientCode>();
+            if (handler != null && handler.GameRoom != null)
+            {
+                _ = handler.GameRoom.Send("player_leave", new { id = handler.myPlayerId });
+                handler.GameRoom.Leave();
+                //Debug.Log("Colyseus room left successfully.");
+            }
+        }
+    }
+#endif
+
+    private void OnApplicationQuit()
+    {
+        //Debug.Log("Application is quitting: Leaving Colyseus room...");
+        if (GameRoom != null)
+        {
+            // Notify the server before leaving
+            _ = GameRoom.Send("player_leave", new { id = myPlayerId });
+
+            GameRoom.Leave();
+            //Debug.Log("Colyseus room left successfully on quit.");
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (GameRoom != null)
+        {
+            // Notify the server before leaving
+            _ = GameRoom.Send("player_leave", new { id = myPlayerId });
+
+            GameRoom.Leave();
+            //Debug.Log("Colyseus room left on destroy.");
+        }
+    }
+
+    private void RemovePlayer(string playerId)
+    {
+        if (playerInstances.TryGetValue(playerId, out GameObject playerObject))
+        {
+            Destroy(playerObject); // Remove the player's GameObject from the scene
+            playerInstances.Remove(playerId); // Remove the reference from the dictionary
+            interpolationData.Remove(playerId); // Clean up interpolation data if it exists
+
+            //Debug.Log($"Player {playerId} has been removed from the game.");
+        }
+        else
+        {
+            //Debug.LogWarning($"Player {playerId} not found in playerInstances.");
         }
     }
 }
@@ -382,6 +578,7 @@ public class PlayerPositionMessage
     public string turning;
     public float speed;
     public int entrance;
+    public string name;
 }
 
 [System.Serializable]
@@ -406,4 +603,31 @@ public class LightsMessage
 {
     public int id;
     public int prev;
+}
+
+[System.Serializable]
+public class TileMessage
+{
+    public string id;
+    public int xx;
+    public int yy;
+}
+
+[System.Serializable]
+public class SpawningMessage
+{
+    public List<int> x;
+}
+
+[System.Serializable]
+public class TileOwnershipMessage
+{
+    [System.Serializable]
+    public class TilePosition
+    {
+        public int x;
+        public int y;
+    }
+
+    public Dictionary<string, TilePosition[]> ownerships;
 }

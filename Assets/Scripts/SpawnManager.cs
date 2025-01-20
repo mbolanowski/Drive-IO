@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class SpawnManager : MonoBehaviour
@@ -11,6 +12,10 @@ public class SpawnManager : MonoBehaviour
     public VehicleControllerWithGears vc;
     public GameObject CameraMover;
 
+    public ColyseusClientCode cc;
+
+    public List<int> availableSpawnSpots = new List<int>();
+
     private void Start()
     {
         ChooseInitialSpawnPoint();
@@ -20,15 +25,20 @@ public class SpawnManager : MonoBehaviour
     // Choose a random spawn point once at the start
     private void ChooseInitialSpawnPoint()
     {
-        if (spawnPoints.Length > 0)
+        while (availableSpawnSpots.Count == 0)
         {
-            // Pick a random spawn point from the array
-            chosenSpawnIndex = Random.Range(0, spawnPoints.Length);
-            Debug.Log("Chosen spawn point at index: " + chosenSpawnIndex);
-        }
-        else
-        {
-            Debug.LogError("No spawn points assigned!");
+            cc.getSpawn();
+
+            if (availableSpawnSpots.Count != 0)
+            {
+                chosenSpawnIndex = availableSpawnSpots[Random.Range(0, availableSpawnSpots.Count)];
+                cc.setSpawn(chosenSpawnIndex);
+                Debug.Log("Chosen spawn point at index: " + chosenSpawnIndex);
+            }
+            else
+            {
+                Debug.LogError("No spawn points assigned!");
+            }
         }
     }
 

@@ -23,6 +23,7 @@ public class PlayerManager : MonoBehaviour
     public SpawnManager sm;
     public VehicleControllerWithGears vc;
     public Minimap mm;
+    public ColyseusClientCode cc;
 
     public GameObject CameraMover;
 
@@ -37,7 +38,8 @@ public class PlayerManager : MonoBehaviour
     public bool _justSpawned = true;
 
     // Store held tiles as a set of (x, y) coordinates
-    private HashSet<(int, int)> heldTiles = new HashSet<(int, int)>();
+    public HashSet<(int, int)> heldTiles = new HashSet<(int, int)>();
+    public HashSet<(int, int)> OtherHeldTiles = new HashSet<(int, int)>();
 
 
     private void Start()
@@ -75,6 +77,7 @@ public class PlayerManager : MonoBehaviour
         CameraMover.SetActive(false);
         _dead = true;
         ResetTilesOnDeath();
+        cc.notifyDeath();
         _lives = 3;
         sm.RespawnPlayer();
         Life3.SetActive(true);
@@ -93,7 +96,8 @@ public class PlayerManager : MonoBehaviour
     {
         //incidentCount.text = "Wykroczenia: " + _incidents.ToString();
         //Debug.Log(GetAssignedTileCount());
-
+        Debug.Log("Held Tiles: " + heldTiles.Count);
+        Debug.Log("Other Tiles: " + OtherHeldTiles.Count);
         if(GetAssignedTileCount() > 0)
         {
             //SceneManager.LoadScene("1");
@@ -125,6 +129,7 @@ public class PlayerManager : MonoBehaviour
     {
         if (x >= 0 && x < 5 && y >= 0 && y < 4) // Ensure the tile is within grid bounds
         {
+            OtherHeldTiles.Remove((x, y));
             heldTiles.Add((x, y));
             myPoints.text = GetAssignedTileCount().ToString();
         }
@@ -151,6 +156,35 @@ public class PlayerManager : MonoBehaviour
     public bool GetTileOwner(int x, int y)
     {
         return heldTiles.Contains((x, y));
+    }
+    public void RemoveTile(int x, int y)
+    {
+        // Check if the tile is currently owned by the player
+        if (heldTiles.Contains((x, y)))
+        {
+            // Remove the tile from the heldTiles set
+            heldTiles.Remove((x, y));
+
+            // Optionally, you can reset the tile color or perform any other action
+            Color color = new Vector4(0.2f, 0.2f, 0.2f, 0.2745f); // Example color
+            OtherHeldTiles.Add((x, y));
+            if (mm.isActiveAndEnabled)
+            {
+                mm.SetTileColor(x, y, color);
+            }
+
+            // Update the display of assigned tile count
+            myPoints.text = GetAssignedTileCount().ToString();
+        }
+        else
+        {
+            Color color = new Vector4(0.2f, 0.2f, 0.2f, 0.2745f); // Example color
+            if (mm.isActiveAndEnabled)
+            {
+                mm.SetTileColor(x, y, color);
+            }
+            OtherHeldTiles.Add((x, y));
+        }
     }
 
     // Get the total count of assigned tiles
