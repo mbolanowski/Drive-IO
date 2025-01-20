@@ -360,11 +360,11 @@ public class ColyseusClientCode : MonoBehaviour
         }
     }
 
-    public void notifyLight(int ids)
+    public void notifyLight(int ids, int previ)
     {
         if (GameRoom != null)
         {
-            _ = GameRoom.Send("light", new { id = ids });
+            _ = GameRoom.Send("light", new { id = ids, prev =  previ});
         }
     }
 
