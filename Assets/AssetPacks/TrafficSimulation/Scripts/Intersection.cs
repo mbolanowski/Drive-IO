@@ -67,32 +67,37 @@ namespace TrafficSimulation
             VehicleAI ai1 = vehicle1.GetComponent<VehicleAI>();
             VehicleAI ai2 = vehicle2.GetComponent<VehicleAI>();
 
-            // If one is going straight and other is turning right
-            if (ai1._TurningStraight && ai2._TurningRight && ((ai1.hasPriority && ai2.hasPriority) || (!ai1.hasPriority && !ai2.hasPriority)))
+            if ((ai1.hasPriority && ai2.hasPriority) || (!ai1.hasPriority && !ai2.hasPriority))
             {
-                return IsVehicleToTheRight(vehicle1.transform, vehicle2.transform);
-            }
-            else if (ai2._TurningStraight && ai1._TurningRight && ((ai1.hasPriority && ai2.hasPriority) || (!ai1.hasPriority && !ai2.hasPriority)))
-            {
-                return ai2.vehicleStatus != Status.STOP && IsVehicleToTheRight(vehicle2.transform, vehicle1.transform);
-            }
+                // If one is going straight and other is turning right
+                if (ai1._TurningStraight && ai2._TurningRight)
+                {
+                    return IsVehicleToTheRight(vehicle1.transform, vehicle2.transform);
+                }
+                else if (ai2._TurningStraight && ai1._TurningRight)
+                {
+                    return ai2.vehicleStatus != Status.STOP && IsVehicleToTheRight(vehicle2.transform, vehicle1.transform);
+                }
 
-            // Handle other cases (left turns etc) as before using horizontal/vertical checks
-            if (ai1._isHorizontal == ai2._isHorizontal)
-            {
-                return (ai1._TurningLeft && ai2._TurningStraight) ||
-                       (ai1._TurningLeft && ai2._TurningRight)    ||
-                       (ai1._TurningLeft && ai2._TurningLeft) ||
-                       (ai2.vehicleStatus != Status.STOP && (ai1._TurningRight && ai2._TurningLeft)) ||
-                       (ai2.vehicleStatus != Status.STOP && (ai1._TurningStraight && ai2._TurningLeft));
+
+                // Handle other cases (left turns etc) as before using horizontal/vertical checks
+                if (ai1._isHorizontal == ai2._isHorizontal)
+                {
+                    return (ai1._TurningLeft && ai2._TurningStraight) ||
+                           (ai1._TurningLeft && ai2._TurningRight) ||
+                           (ai1._TurningLeft && ai2._TurningLeft) ||
+                           (ai2.vehicleStatus != Status.STOP && (ai1._TurningRight && ai2._TurningLeft)) ||
+                           (ai2.vehicleStatus != Status.STOP && (ai1._TurningStraight && ai2._TurningLeft));
+                }
+                else
+                {
+                    return (ai1._TurningLeft && ai2._TurningStraight) ||
+                           (ai1._TurningLeft && ai2._TurningLeft) ||
+                           (ai1._TurningStraight && ai2._TurningStraight) ||
+                           (ai2.vehicleStatus != Status.STOP && (ai1._TurningStraight && ai2._TurningLeft));
+                }
             }
-            else
-            {
-                return (ai1._TurningLeft && ai2._TurningStraight) ||
-                       (ai1._TurningLeft && ai2._TurningLeft) ||
-                       (ai1._TurningStraight && ai2._TurningStraight) ||
-                       (ai2.vehicleStatus != Status.STOP && (ai1._TurningStraight && ai2._TurningLeft));
-            }
+            return false;
         }
 
         bool HasConflictingVehicleInIntersection(GameObject vehicle)
