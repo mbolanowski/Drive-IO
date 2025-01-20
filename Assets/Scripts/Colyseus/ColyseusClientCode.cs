@@ -143,7 +143,6 @@ public class ColyseusClientCode : MonoBehaviour
                 InstantiatePlayer(message.id);
                 playerInstance = playerInstances[message.id];
                 playerInstance.name = message.id;
-                GameRoom.Send("lights", new { id = intersection.GetElapsedTime() });
             }
         }
 
