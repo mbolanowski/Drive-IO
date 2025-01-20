@@ -81,6 +81,8 @@ public class ColyseusClientCode : MonoBehaviour
                 return;
             }
 
+            //sm.ChooseInitialSpawnPoint();
+
             _room.OnMessage<PlayerJoinMessage>("player_leave", message =>
             {
                 RemovePlayer(message.id);
@@ -107,6 +109,7 @@ public class ColyseusClientCode : MonoBehaviour
             _room.OnMessage<PlayerJoinMessage>("player_id", message =>
             {
                 myPlayerId = message.id;
+                getSpawn();
                 //Debug.Log($"Assigned Player ID: {myPlayerId}");
             });
 
@@ -128,9 +131,13 @@ public class ColyseusClientCode : MonoBehaviour
 
             });
 
-            _room.OnMessage<SpawningMessage>("getSpawn", message =>
+            _room.OnMessage<SpawningMessage>("spawning", message =>
             {
-                sm.availableSpawnSpots = message.x;
+                if (message.playerID == myPlayerId)
+                {
+                    sm.availableSpawnSpots = message.id;
+                    sm.ChooseInitialSpawnPoint();
+                }
             });
 
             _room.OnMessage<PlayerJoinMessage>("death", message =>
@@ -178,6 +185,7 @@ public class ColyseusClientCode : MonoBehaviour
                     }
                 }
             });
+
         }
         catch (Exception e)
         {
@@ -481,7 +489,7 @@ public class ColyseusClientCode : MonoBehaviour
     {
         if (GameRoom != null)
         {
-            _ = GameRoom.Send("getSpawn", new { id = myPlayerId});
+            _ = GameRoom.Send("spawning", new { playerID = myPlayerId });
         }
     }
 
@@ -616,7 +624,8 @@ public class TileMessage
 [System.Serializable]
 public class SpawningMessage
 {
-    public List<int> x;
+    public List<int> id;
+    public string playerID;
 }
 
 [System.Serializable]
