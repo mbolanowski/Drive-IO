@@ -33,7 +33,7 @@ namespace TrafficSimulation
         public ColyseusClientCode cc;
 
         [HideInInspector] public int currentRedLightsGroup = 1;
-        [HideInInspector] public int previousRedLightsGroup = 1;
+        [HideInInspector] public int previousRedLightsGroup = 2;
 
         private float lastSwitchTime; // Tracks the last state change time
 
@@ -596,7 +596,7 @@ namespace TrafficSimulation
             {
                 if (Time.time - lastSwitchTime > 6f && !once)
                 {
-                    cc.notifyLight(currentRedLightsGroup, previousRedLightsGroup);
+                    cc.notifyLight(currentRedLightsGroup, 3);
                     once = true;
                 }
             }
