@@ -107,9 +107,9 @@ public class ColyseusClientCode : MonoBehaviour
                 }
             });
 
-            _room.OnMessage<PlayerJoinMessage>("light", message =>
+            _room.OnMessage<LightsMessage>("light", message =>
             {
-                tm.SwitchLights();
+                tm.CommunicateWithServer(message.id, message.previ);
             });
         }
         catch (Exception e)
@@ -403,5 +403,6 @@ public class PlayerJoinMessage
 [System.Serializable]
 public class LightsMessage
 {
-    public float id;
+    public int id;
+    public int previ;
 }

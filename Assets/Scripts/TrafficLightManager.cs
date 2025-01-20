@@ -89,13 +89,38 @@ public class TrafficLightManager : MonoBehaviour
         }
     }
 
-    private void SetGroupLights(TrafficLightGroup group, LightColor color)
+    public void SetGroupLights(TrafficLightGroup group, LightColor color)
     {
         groupStates[group] = color;
         foreach (var light in trafficLightGroups[group])
         {
             light.UpdateLight(color);
         }
+    }
+
+    public void CommunicateWithServer(int currentGroup, int previousGroup)
+    {
+        if (currentGroup == 1 || previousGroup == 1)
+        {
+            SetGroupLights(TrafficLightGroup.Group1, LightColor.Yellow);
+            SetGroupLights(TrafficLightGroup.Group2, LightColor.Red);
+        }
+        else if (currentGroup == 2 || previousGroup == 1)
+        {
+            SetGroupLights(TrafficLightGroup.Group1, LightColor.Red);
+            SetGroupLights(TrafficLightGroup.Group2, LightColor.Green);
+        }
+        else if (currentGroup == 2 || previousGroup == 2)
+        {
+            SetGroupLights(TrafficLightGroup.Group1, LightColor.Red);
+            SetGroupLights(TrafficLightGroup.Group2, LightColor.Yellow);
+        }
+        else if (currentGroup == 1 || previousGroup == 1)
+        {
+            SetGroupLights(TrafficLightGroup.Group1, LightColor.Green);
+            SetGroupLights(TrafficLightGroup.Group2, LightColor.Red);
+        }
+
     }
 
     /// <summary>
