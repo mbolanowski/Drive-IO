@@ -1,9 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.Tilemaps;
+using static TileOwnershipMessage;
 
 public class PlayerManager : MonoBehaviour
 {
@@ -40,6 +42,8 @@ public class PlayerManager : MonoBehaviour
     // Store held tiles as a set of (x, y) coordinates
     public HashSet<(int, int)> heldTiles = new HashSet<(int, int)>();
     public HashSet<(int, int)> OtherHeldTiles = new HashSet<(int, int)>();
+
+    public Dictionary<string, TilePosition[]> ownerships;
 
 
     private void Start()
@@ -98,9 +102,9 @@ public class PlayerManager : MonoBehaviour
         //Debug.Log(GetAssignedTileCount());
         Debug.Log("Held Tiles: " + heldTiles.Count);
         Debug.Log("Other Tiles: " + OtherHeldTiles.Count);
-        if(GetAssignedTileCount() > 0)
+        if((heldTiles.Count + OtherHeldTiles.Count) > 19)
         {
-            //SceneManager.LoadScene("1");
+            SceneManager.LoadScene("1");
         }
     }
 
@@ -197,5 +201,21 @@ public class PlayerManager : MonoBehaviour
     public void ClearHeldTiles()
     {
         heldTiles.Clear();
+    }
+
+    public int GetTileCountByPlayerID(string playerID)
+    {
+        // Check if the player ID exists in the ownership dictionary
+        if (ownerships.ContainsKey(playerID))
+        {
+            // Return the count of tiles that the player owns
+            return ownerships[playerID].Length;
+        }
+        else
+        {
+            // If the player ID does not exist, return 0
+            Debug.LogWarning($"Player ID {playerID} not found in ownerships.");
+            return 0;
+        }
     }
 }

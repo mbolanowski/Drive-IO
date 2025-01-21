@@ -7151,6 +7151,8 @@ MonoBehaviour:
   mm: {fileID: 733642302}
   sm: {fileID: 1755336561}
   nameText: {fileID: 1153437812}
+  leaderboardText: {fileID: 774729779}
+  leaderboardPoints: {fileID: 948030642}
 --- !u!114 &209290609
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -25443,7 +25445,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 2. Player2
+  m_text: 
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: e73a58f6e2794ae7b1b7e50b7fb811b0, type: 2}

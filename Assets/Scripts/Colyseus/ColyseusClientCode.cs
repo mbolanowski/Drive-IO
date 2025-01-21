@@ -28,6 +28,8 @@ public class ColyseusClientCode : MonoBehaviour
     public SpawnManager sm;
 
     public TextMeshPro nameText;
+    public TextMeshPro leaderboardText;
+    public TextMeshPro leaderboardPoints;
 
     // Dictionaries to store instances and interpolation data
     private Dictionary<string, GameObject> playerInstances = new Dictionary<string, GameObject>();
@@ -158,6 +160,7 @@ public class ColyseusClientCode : MonoBehaviour
 
             _room.OnMessage<TileOwnershipMessage>("current_tiles", (message) =>
             {
+                pm.ownerships = message.ownerships;
                 // Clear OtherHeldTiles to start fresh with server state
                 pm.OtherHeldTiles.Clear();
 
@@ -232,6 +235,11 @@ public class ColyseusClientCode : MonoBehaviour
             FloatingTextNPC ftn = playerInstance.GetComponentInChildren<FloatingTextNPC>();
 
             playerInstance.GetComponentInChildren<FloatingTextNPC>().displayText = message.name;
+
+            if(message.name != "input nickname here...") leaderboardText.text = message.name;
+            else leaderboardText.text = "default (" + message.id + ")";
+
+            leaderboardPoints.text = pm.GetTileCountByPlayerID(message.id).ToString();
         }
     }
 
