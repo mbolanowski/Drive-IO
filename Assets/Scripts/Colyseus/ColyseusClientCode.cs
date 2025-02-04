@@ -62,7 +62,8 @@ public class ColyseusClientCode : MonoBehaviour
         {
             _menuManager = gameObject.AddComponent<MenuManager>();
         }
-        _client = new ColyseusClient(_menuManager.HostAddress);
+        _client = new ColyseusClient("https://pl-waw-3e5aa817.colyseus.cloud");
+        //_client = new ColyseusClient(_menuManager.HostAddress);
     }
 
     public async Task JoinOrCreateGame()
